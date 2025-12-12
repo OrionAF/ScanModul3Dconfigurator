@@ -139,11 +139,15 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
         axis,
         position,
         length: finalLength,
-        height: basket.dimensions.height,
+        height: basket.specs.holes.vertical.dividerHeight,
         offsetAlongAxis: finalOffset,
       };
     },
-    [basket.dimensions.height, basket.specs.dimensions.internalBottom.length, basket.specs.dimensions.internalBottom.width]
+    [
+      basket.specs.dimensions.internalBottom.length,
+      basket.specs.dimensions.internalBottom.width,
+      basket.specs.holes.vertical.dividerHeight,
+    ]
   );
 
   const dividerPreview = useMemo(() => {
