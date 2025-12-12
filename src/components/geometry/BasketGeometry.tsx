@@ -326,20 +326,20 @@ export const ScanmodulBasket: React.FC<{ position?: [number, number, number]; he
         const fixedUsage =
           SPECS.holes.vertical.bottomHoleHeight +
           SPECS.holes.vertical.topHoleHeight +
-          SPECS.holes.vertical.dividerHeight * 2;
+          SPECS.dividers.height * 2;
         const availableHeight = height - 1.0;
         const middleHeight = availableHeight - fixedUsage;
 
         const yMiddle =
-          paddingBottom + SPECS.holes.vertical.bottomHoleHeight + SPECS.holes.vertical.dividerHeight;
+          paddingBottom + SPECS.holes.vertical.bottomHoleHeight + SPECS.dividers.height;
         defs.push({ y: yMiddle, height: middleHeight });
 
-        const yTop = yMiddle + middleHeight + SPECS.holes.vertical.dividerHeight;
+        const yTop = yMiddle + middleHeight + SPECS.dividers.height;
         defs.push({ y: yTop, height: SPECS.holes.vertical.topHoleHeight });
       } else {
         defs.push({ y: paddingBottom, height: SPECS.holes.vertical.bottomHoleHeight });
         defs.push({
-          y: paddingBottom + SPECS.holes.vertical.bottomHoleHeight + SPECS.holes.vertical.dividerHeight,
+          y: paddingBottom + SPECS.holes.vertical.bottomHoleHeight + SPECS.dividers.height,
           height: SPECS.holes.vertical.topHoleHeight,
         });
       }
