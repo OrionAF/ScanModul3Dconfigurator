@@ -1,159 +1,124 @@
-import { useCallback, useMemo, useState } from "react";
-import { ThreeEvent, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
-import { getSnapGrid, findClosestSnap } from "../components/interaction/grid";
+import { getSnapGrid } from "../components/interaction/grid";
+import { PlacementMode } from "../context/ConfiguratorProvider";
 
-export type PlacementDrawingState = {
-  startX: number;
-  startZ: number;
-  currentX: number;
-  currentZ: number;
-  axis: "x" | "z";
-};
+export type SnapPoint = { x: number; z: number };
 
 export type PlacementPreview = {
-  cursor: { x: number; z: number } | null;
-  drawing: PlacementDrawingState | null;
   dividerPreview: Divider | null;
-  gridValue: number | null;
+  startSnaps: SnapPoint[];
+  endSnaps: SnapPoint[];
+  selectedStart: SnapPoint | null;
+  hoveredEnd: SnapPoint | null;
 };
 
 type UsePlacementProps = {
   basket: BasketType;
-  placementMode: "x" | "z";
+  placementMode: PlacementMode;
   onPlace: (pos: number, axis: "x" | "z", length: number, offset: number) => void;
 };
 
+const MIN_DIVIDER_LENGTH = 40;
+
 export const usePlacement = ({ basket, placementMode, onPlace }: UsePlacementProps) => {
-  const { camera, raycaster, pointer } = useThree();
-  const [cursor, setCursor] = useState<{ x: number; z: number } | null>(null);
-  const [drawing, setDrawing] = useState<PlacementDrawingState | null>(null);
+  const [selectedStart, setSelectedStart] = useState<SnapPoint | null>(null);
+  const [hoveredEnd, setHoveredEnd] = useState<SnapPoint | null>(null);
 
   const planeY = basket.dimensions.height / 2;
-  const mathPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY), [planeY]);
-  const intersectVec = useMemo(() => new THREE.Vector3(), []);
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
 
-  const snapPointerToPlane = useCallback(() => {
-    raycaster.setFromCamera(pointer, camera);
-    if (!raycaster.ray.intersectPlane(mathPlane, intersectVec)) return null;
+  const startSnaps = useMemo(() => xSnaps.flatMap((x) => zSnaps.map((z) => ({ x, z }))), [xSnaps, zSnaps]);
 
-    const snapX = findClosestSnap(intersectVec.x, xSnaps);
-    const snapZ = findClosestSnap(intersectVec.z, zSnaps);
-    return { snapX, snapZ };
-  }, [camera, mathPlane, pointer, raycaster, xSnaps, zSnaps]);
+  const endSnaps = useMemo(() => {
+    if (!selectedStart) return [];
 
-  const handlePointerMove = useCallback(() => {
-    const snapped = snapPointerToPlane();
-    if (!snapped) return;
+    const alongX = xSnaps.map((x) => ({ x, z: selectedStart.z }));
+    const alongZ = zSnaps.map((z) => ({ x: selectedStart.x, z }));
 
-    setCursor((prev) => {
-      if (prev && prev.x === snapped.snapX && prev.z === snapped.snapZ) return prev;
-      return { x: snapped.snapX, z: snapped.snapZ };
-    });
+    const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
+    const merged = [...alongX, ...alongZ].filter((snap) => keyFor(snap) !== keyFor(selectedStart));
 
-    if (!drawing) return;
+    const seen = new Map<string, SnapPoint>();
+    merged.forEach((snap) => seen.set(keyFor(snap), snap));
+    return Array.from(seen.values());
+  }, [selectedStart, xSnaps, zSnaps]);
 
-    setDrawing((prev) => {
-      if (!prev) return prev;
-      if (placementMode === "x") {
-        const next = { ...prev, currentX: snapped.snapX, currentZ: prev.startZ };
-        if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
-        return next;
-      }
-      const next = { ...prev, currentX: prev.startX, currentZ: snapped.snapZ };
-      if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
-      return next;
-    });
-  }, [drawing, placementMode, snapPointerToPlane]);
-
-  const handlePointerDown = useCallback(
-    (e: ThreeEvent<PointerEvent>) => {
-      e.stopPropagation();
-      if (!cursor) return;
-      setDrawing({
-        startX: cursor.x,
-        startZ: cursor.z,
-        currentX: cursor.x,
-        currentZ: cursor.z,
-        axis: placementMode,
-      });
-    },
-    [cursor, placementMode]
-  );
-
-  const handlePointerUp = useCallback(() => {
-    if (!drawing) return;
-    const { startX, startZ, currentX, currentZ, axis } = drawing;
-
-    const { length: bottomLength, width: bottomWidth } = basket.specs.dimensions.internalBottom;
-
-    if (axis === "x") {
-      const minX = Math.min(startX, currentX);
-      const maxX = Math.max(startX, currentX);
-      const length = Math.max(40, maxX - minX);
-      const center = (minX + maxX) / 2;
-      if (length <= 40) onPlace(startZ, "x", bottomLength, 0);
-      else onPlace(startZ, "x", length, center);
-    } else {
-      const minZ = Math.min(startZ, currentZ);
-      const maxZ = Math.max(startZ, currentZ);
-      const length = Math.max(40, maxZ - minZ);
-      const center = (minZ + maxZ) / 2;
-      if (length <= 40) onPlace(startX, "z", bottomWidth, 0);
-      else onPlace(startX, "z", length, center);
+  useEffect(() => {
+    if (placementMode !== "divider") {
+      setSelectedStart(null);
+      setHoveredEnd(null);
     }
+  }, [placementMode]);
 
-    setDrawing(null);
-  }, [basket, drawing, onPlace]);
+  useEffect(() => {
+    setSelectedStart(null);
+    setHoveredEnd(null);
+  }, [xSnaps, zSnaps]);
+
+  const computeDivider = useCallback(
+    (start: SnapPoint, end: SnapPoint): Divider | null => {
+      const isXAxis = end.z === start.z && end.x !== start.x;
+      const isZAxis = end.x === start.x && end.z !== start.z;
+      if (!isXAxis && !isZAxis) return null;
+
+      const axis = isXAxis ? "x" : "z";
+      const delta = axis === "x" ? Math.abs(end.x - start.x) : Math.abs(end.z - start.z);
+      const offset = axis === "x" ? (end.x + start.x) / 2 : (end.z + start.z) / 2;
+      const position = axis === "x" ? start.z : start.x;
+
+      const defaultLength =
+        axis === "x" ? basket.specs.dimensions.internalBottom.length : basket.specs.dimensions.internalBottom.width;
+      const finalLength = delta < MIN_DIVIDER_LENGTH ? defaultLength : delta;
+      const finalOffset = delta < MIN_DIVIDER_LENGTH ? 0 : offset;
+
+      return {
+        id: "ghost",
+        axis,
+        position,
+        length: finalLength,
+        height: basket.dimensions.height,
+        offsetAlongAxis: finalOffset,
+      };
+    },
+    [basket.dimensions.height, basket.specs.dimensions.internalBottom.length, basket.specs.dimensions.internalBottom.width]
+  );
 
   const dividerPreview = useMemo(() => {
-    if (!drawing) return null;
+    if (!selectedStart || !hoveredEnd) return null;
+    return computeDivider(selectedStart, hoveredEnd);
+  }, [computeDivider, hoveredEnd, selectedStart]);
 
-    let length = 0;
-    let x = 0;
-    let z = 0;
-    let offset = 0;
+  const handleStartClick = useCallback((snap: SnapPoint) => {
+    setSelectedStart(snap);
+    setHoveredEnd(null);
+  }, []);
 
-    if (drawing.axis === "x") {
-      length = Math.abs(drawing.currentX - drawing.startX);
-      if (length < 10) length = 40;
-      offset = (drawing.startX + drawing.currentX) / 2;
-      x = offset;
-      z = drawing.startZ;
-    } else {
-      length = Math.abs(drawing.currentZ - drawing.startZ);
-      if (length < 10) length = 40;
-      offset = (drawing.startZ + drawing.currentZ) / 2;
-      x = drawing.startX;
-      z = offset;
-    }
+  const handleEndClick = useCallback(
+    (snap: SnapPoint) => {
+      if (!selectedStart) return;
+      const divider = computeDivider(selectedStart, snap);
+      if (!divider) return;
 
-    const previewDivider: Divider = {
-      id: "ghost",
-      axis: drawing.axis,
-      position: drawing.axis === "x" ? z : x,
-      length,
-      height: basket.dimensions.height,
-      offsetAlongAxis: offset,
-    };
-
-    return previewDivider;
-  }, [basket.dimensions.height, drawing]);
-
-  const gridValue = useMemo(() => {
-    if (drawing) return drawing.axis === "x" ? drawing.startZ : drawing.startX;
-    if (!cursor) return null;
-    return placementMode === "x" ? cursor.z : cursor.x;
-  }, [cursor, drawing, placementMode]);
-
-  const preview: PlacementPreview = useMemo(
-    () => ({ cursor, drawing, dividerPreview, gridValue }),
-    [cursor, dividerPreview, drawing, gridValue]
+      onPlace(divider.position, divider.axis, divider.length, divider.offsetAlongAxis || 0);
+      setSelectedStart(null);
+      setHoveredEnd(null);
+    },
+    [computeDivider, onPlace, selectedStart]
   );
 
-  return { preview, handlePointerMove, handlePointerDown, handlePointerUp, planeY };
+  const preview: PlacementPreview = useMemo(
+    () => ({ dividerPreview, startSnaps, endSnaps, selectedStart, hoveredEnd }),
+    [dividerPreview, endSnaps, hoveredEnd, selectedStart, startSnaps]
+  );
+
+  return {
+    preview,
+    planeY,
+    setHoveredEnd,
+    handleStartClick,
+    handleEndClick,
+  };
 };

@@ -18,24 +18,20 @@ const AppContent = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      switch (e.key) {
-        case "1":
-          setPlacementMode((prev) => (prev === "z" ? null : "z"));
-          selectDivider(null);
-          break;
-        case "2":
-          setPlacementMode((prev) => (prev === "x" ? null : "x"));
-          selectDivider(null);
-          break;
-        case "Escape":
-          setPlacementMode((prev) => (prev ? null : prev));
-          if (!placementMode) selectDivider(null);
-          break;
-        case "Delete":
-        case "Backspace":
-          if (selectedDividerId) removeDivider(selectedDividerId);
-          break;
-      }
+        switch (e.key) {
+          case "1":
+            setPlacementMode((prev) => (prev === "divider" ? null : "divider"));
+            selectDivider(null);
+            break;
+          case "Escape":
+            setPlacementMode((prev) => (prev ? null : prev));
+            selectDivider(null);
+            break;
+          case "Delete":
+          case "Backspace":
+            if (selectedDividerId) removeDivider(selectedDividerId);
+            break;
+        }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -55,19 +51,15 @@ const AppContent = () => {
               }`}
             >
               <h3 className="font-bold">ScanModul Visualizer</h3>
-              <div className={`text-xs mt-1 space-y-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                <div>Left Click: Select/Rotate | Right Click: Pan | Scroll: Zoom</div>
-                <div
-                  className={`font-semibold border-t pt-1 mt-1 ${
-                    isDarkMode ? "text-teal-400 border-gray-600" : "text-teal-700 border-gray-200"
-                  }`}
-                >
-                  Note: The UI mentions Shift-to-force-full-length, but that behavior is not implemented.
+                <div className={`text-xs mt-1 space-y-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  <div>Left Click: Select/Rotate | Right Click: Pan | Scroll: Zoom</div>
+                  <div className={isDarkMode ? "text-teal-300" : "text-teal-600"}>
+                    Tip: Divider mode now uses two clicks: choose a start snap, then an end snap to place.
+                  </div>
+                  <div className={isDarkMode ? "text-gray-400" : "text-gray-500"}>
+                    Right-click a divider to select; resize with handles when not placing.
+                  </div>
                 </div>
-                <div className={isDarkMode ? "text-teal-300" : "text-teal-600"}>
-                  Tip: Right-click a divider to select; resize with handles.
-                </div>
-              </div>
             </div>
           </div>
         </>
