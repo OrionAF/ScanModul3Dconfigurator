@@ -874,13 +874,26 @@ const DividerDrawingManager: React.FC<{
     const snapX = findClosestSnap(intersectVec.x, xSnaps);
     const snapZ = findClosestSnap(intersectVec.z, zSnaps);
 
-    setCursorPos({ x: snapX, z: snapZ });
+    setCursorPos((prev) => {
+      if (prev && prev.x === snapX && prev.z === snapZ) return prev;
+      return { x: snapX, z: snapZ };
+    });
 
     if (drawing) {
       if (placementMode === "x") {
-        setDrawing({ ...drawing, currentX: snapX, currentZ: drawing.startZ });
+        setDrawing((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, currentX: snapX, currentZ: prev.startZ };
+          if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
+          return next;
+        });
       } else {
-        setDrawing({ ...drawing, currentX: drawing.startX, currentZ: snapZ });
+        setDrawing((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, currentX: prev.startX, currentZ: snapZ };
+          if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
+          return next;
+        });
       }
     }
   };
@@ -1062,6 +1075,15 @@ const InteractionManager: React.FC<{
 
     const newLen = newEnd - newStart;
     const newCenter = newStart + newLen / 2;
+
+    const currentDivider = dividers.find((d) => d.id === drag.dividerId);
+    if (
+      currentDivider &&
+      currentDivider.length === newLen &&
+      (currentDivider.offsetAlongAxis || 0) === newCenter
+    ) {
+      return;
+    }
 
     onUpdate(drag.dividerId, { length: newLen, offsetAlongAxis: newCenter });
   });
