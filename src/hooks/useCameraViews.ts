@@ -22,25 +22,60 @@ export const useCameraViews = ({ view, isLocked, controlsRef }: UseCameraViewsOp
   const targetViewRef = useRef<CameraView>(activeView);
 
   const vec = useMemo(() => new THREE.Vector3(), []);
-  const targetVec = useMemo(() => new THREE.Vector3(0, 100, 0), []);
+  const defaultTargetVec = useMemo(() => new THREE.Vector3(0, 100, 0), []);
+  const topTargetVec = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
   useEffect(() => {
     targetViewRef.current = activeView;
     setIsAnimating(true);
+
+    if (activeView === "top") {
+      if (controlsRef.current) {
+        controlsRef.current.target.copy(topTargetVec);
+        if (typeof controlsRef.current.setAzimuthalAngle === "function") {
+          controlsRef.current.setAzimuthalAngle(0);
+        }
+        if (typeof controlsRef.current.setPolarAngle === "function") {
+          controlsRef.current.setPolarAngle(0);
+        }
+        controlsRef.current.update();
+      }
+
+      camera.up.set(0, 1, 0);
+      camera.lookAt(topTargetVec);
+    }
+
     const timer = setTimeout(() => setIsAnimating(false), 1000);
     return () => clearTimeout(timer);
-  }, [activeView]);
+  }, [activeView, camera, controlsRef, topTargetVec]);
 
   useFrame(() => {
     if (!isAnimating) return;
     const [x, y, z] = getTargetPosition(targetViewRef.current);
     const step = 0.1;
+    const target = targetViewRef.current === "top" ? topTargetVec : defaultTargetVec;
+
     camera.position.lerp(vec.set(x, y, z), step);
     if (controlsRef.current) {
-      controlsRef.current.target.lerp(targetVec, step);
+      controlsRef.current.target.lerp(target, step);
+      if (targetViewRef.current === "top") {
+        if (typeof controlsRef.current.setAzimuthalAngle === "function") {
+          controlsRef.current.setAzimuthalAngle(0);
+        }
+        if (typeof controlsRef.current.setPolarAngle === "function") {
+          controlsRef.current.setPolarAngle(0);
+        }
+      }
       controlsRef.current.update();
     }
-    if (camera.position.distanceTo(vec) < 1) setIsAnimating(false);
+    if (targetViewRef.current === "top") {
+      camera.lookAt(target);
+    }
+
+    const hasReachedPosition = camera.position.distanceTo(vec) < 1;
+    const hasReachedTarget = !controlsRef.current || controlsRef.current.target.distanceTo(target) < 1;
+
+    if (hasReachedPosition && hasReachedTarget) setIsAnimating(false);
   });
 
   return { effectiveView: activeView, isAnimating };
