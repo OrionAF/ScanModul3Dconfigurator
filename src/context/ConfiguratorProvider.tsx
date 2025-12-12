@@ -61,7 +61,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
           ? currentBasket.specs.dimensions.internalBottom.length
           : currentBasket.specs.dimensions.internalBottom.width);
 
-      const height = currentBasket.dimensions.height;
+      const height = currentBasket.specs.holes.vertical.dividerHeight;
 
       const newDivider: Divider = {
         id: `div-${Date.now()}`,
