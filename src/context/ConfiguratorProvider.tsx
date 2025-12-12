@@ -42,7 +42,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [cameraView, setCameraView] = useState<CameraView>("iso");
 
-  const isCameraLocked = !!selectedDividerId;
+  const isCameraLocked = placementMode === "divider" || !!selectedDividerId;
   const effectiveCameraView = isCameraLocked ? "top" : cameraView;
 
   const selectBasket = useCallback((basket: BasketType) => {

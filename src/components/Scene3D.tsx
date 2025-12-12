@@ -44,6 +44,7 @@ const SceneContent: React.FC<SceneContentProps> = ({
   };
 
   const isDrawingMode = placementMode === "divider";
+  const isCameraInteractionLocked = isCameraLocked || isDrawingMode;
 
   return (
     <>
@@ -65,8 +66,8 @@ const SceneContent: React.FC<SceneContentProps> = ({
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2.1}
           enabled={!isDrawingMode}
-          enableRotate={!isCameraLocked}
-          enablePan={!isCameraLocked}
+          enableRotate={!isCameraInteractionLocked}
+          enablePan={!isCameraInteractionLocked}
         />
 
         <group>
