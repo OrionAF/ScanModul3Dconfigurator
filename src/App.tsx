@@ -99,7 +99,6 @@ type BasketSpecs = {
 // -------------------- Data (catalog.ts) --------------------
 
 const BASKETS: BasketType[] = [
-  { id: "b-400-300-100", name: "400×300×100", dimensions: { width: 400, depth: 300, height: 100 } },
   { id: "b-600-400-200", name: "600×400×200", dimensions: { width: 600, depth: 400, height: 200 } },
   { id: "b-600-400-100", name: "600×400×100", dimensions: { width: 600, depth: 400, height: 100 } },
 ];
@@ -1567,7 +1566,7 @@ const Controls: React.FC<{
 // -------------------- App (App.tsx) --------------------
 
 export default function App() {
-  const [currentBasket, setCurrentBasket] = useState<BasketType>(BASKETS[1]);
+  const [currentBasket, setCurrentBasket] = useState<BasketType>(BASKETS[0]);
   const [dividers, setDividers] = useState<Divider[]>([]);
   const [items, setItems] = useState<PlacedItem[]>([]);
 
