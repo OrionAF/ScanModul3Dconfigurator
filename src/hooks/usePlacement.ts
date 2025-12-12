@@ -95,13 +95,13 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
       : xEdgeSet.has(selectedStart.x) && !zEdgeSet.has(selectedStart.z);
 
     if (allowZAxis) {
-      zEdges
+      zSnaps
         .filter((z) => z !== selectedStart.z)
         .forEach((z) => candidates.push({ x: selectedStart.x, z }));
     }
 
     if (allowXAxis) {
-      xEdges
+      xSnaps
         .filter((x) => x !== selectedStart.x)
         .forEach((x) => candidates.push({ x, z: selectedStart.z }));
     }
@@ -109,7 +109,7 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
     const seen = new Map<string, SnapPoint>();
     candidates.forEach((snap) => seen.set(keyFor(snap), snap));
     return Array.from(seen.values());
-  }, [selectedStart, xEdges, zEdges]);
+  }, [selectedStart, xEdges, xSnaps, zEdges, zSnaps]);
 
   useEffect(() => {
     if (placementMode !== "divider") {
