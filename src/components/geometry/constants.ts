@@ -7,6 +7,9 @@ export const SPECS: BasketSpecs = {
     internalTop: { length: 545, width: 345 },
     internalBottom: { length: 530, width: 330 },
   },
+  dividers: {
+    height: 22,
+  },
   holes: {
     longSide: {
       cols: 18,
@@ -24,7 +27,6 @@ export const SPECS: BasketSpecs = {
     },
     vertical: {
       bottomHoleHeight: 37,
-      dividerHeight: 22,
       topHoleHeight: 40,
     },
     grid: {

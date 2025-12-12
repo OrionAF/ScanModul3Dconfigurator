@@ -4,6 +4,9 @@ export type BasketSpecs = {
     internalTop: { length: number; width: number };
     internalBottom: { length: number; width: number };
   };
+  dividers: {
+    height: number;
+  };
   holes: {
     longSide: {
       cols: number;
@@ -21,7 +24,6 @@ export type BasketSpecs = {
     };
     vertical: {
       bottomHoleHeight: number;
-      dividerHeight: number;
       topHoleHeight: number;
     };
     grid: {
