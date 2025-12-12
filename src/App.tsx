@@ -1212,6 +1212,7 @@ const Scene3D: React.FC<{
   items: PlacedItem[];
   placementMode: "x" | "z" | "remove" | null;
   selectedDividerId: string | null;
+  isCameraLocked: boolean;
   onPlaceDivider: (position: number, axis: "x" | "z", length?: number, offset?: number) => void;
   onRemoveDivider: (id: string) => void;
   onUpdateDivider: (id: string, updates: Partial<Divider>) => void;
@@ -1225,6 +1226,7 @@ const Scene3D: React.FC<{
   items,
   placementMode,
   selectedDividerId,
+  isCameraLocked,
   onPlaceDivider,
   onRemoveDivider,
   onUpdateDivider,
@@ -1263,6 +1265,8 @@ const Scene3D: React.FC<{
         minPolarAngle={0}
         maxPolarAngle={Math.PI / 2.1}
         enabled={!isDrawingMode}
+        enableRotate={!isCameraLocked}
+        enablePan={!isCameraLocked}
       />
 
       <group>
@@ -1323,6 +1327,7 @@ const Controls: React.FC<{
   isDarkMode: boolean;
   toggleTheme: () => void;
   cameraView: "iso" | "top" | "front";
+  cameraLocked: boolean;
   setCameraView: (v: "iso" | "top" | "front") => void;
 }> = ({
   currentBasket,
@@ -1333,6 +1338,7 @@ const Controls: React.FC<{
   isDarkMode,
   toggleTheme,
   cameraView,
+  cameraLocked,
   setCameraView,
 }) => {
   const bgClass = isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200";
@@ -1386,7 +1392,11 @@ const Controls: React.FC<{
             ].map((view) => (
               <button
                 key={view.id}
-                onClick={() => setCameraView(view.id as any)}
+                onClick={() => {
+                  if (cameraLocked) return;
+                  setCameraView(view.id as any);
+                }}
+                disabled={cameraLocked}
                 className={`flex-1 py-2 px-3 rounded-md border flex flex-col items-center gap-1 transition-all ${
                   cameraView === view.id
                     ? isDarkMode
@@ -1395,13 +1405,18 @@ const Controls: React.FC<{
                     : isDarkMode
                     ? "bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-400"
                     : "bg-white border-gray-200 hover:bg-gray-50 text-gray-600"
-                }`}
+                } ${cameraLocked ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 <view.icon className="w-5 h-5" />
                 <span className="text-[10px] font-bold">{view.label}</span>
               </button>
             ))}
           </div>
+          {cameraLocked && (
+            <p className={`text-[11px] mt-2 ${subTextClass}`}>
+              Divider selected: camera locked to top view until you deselect.
+            </p>
+          )}
         </section>
 
         <section>
@@ -1562,6 +1577,9 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [cameraView, setCameraView] = useState<"iso" | "top" | "front">("iso");
 
+  const isCameraLocked = !!selectedDividerId;
+  const effectiveCameraView = isCameraLocked ? "top" : cameraView;
+
   const handleSelectBasket = (basket: BasketType) => {
     setCurrentBasket(basket);
     setDividers([]);
@@ -1646,13 +1664,14 @@ export default function App() {
           items={items}
           placementMode={placementMode}
           selectedDividerId={selectedDividerId}
+          isCameraLocked={isCameraLocked}
           onPlaceDivider={handlePlaceDivider}
           onRemoveDivider={handleRemoveDivider}
           onUpdateDivider={handleUpdateDivider}
           onSelectDivider={handleSelectDivider}
           onDeselectAll={handleDeselectAll}
           isDarkMode={isDarkMode}
-          cameraView={cameraView}
+          cameraView={effectiveCameraView}
         />
 
         <div className="absolute top-4 left-4 pointer-events-none">
@@ -1678,7 +1697,8 @@ export default function App() {
           setPlacementMode={setPlacementMode}
           isDarkMode={isDarkMode}
           toggleTheme={() => setIsDarkMode((v) => !v)}
-          cameraView={cameraView}
+          cameraView={effectiveCameraView}
+          cameraLocked={isCameraLocked}
           setCameraView={setCameraView}
         />
       </div>
