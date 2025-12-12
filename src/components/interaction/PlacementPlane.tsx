@@ -84,19 +84,38 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
 
   const TrackGuides = () => {
     if (!preview.selectedStart) return null;
-    const showXAxisGuide = preview.endSnaps.some((snap) => snap.z === preview.selectedStart?.z);
-    const showZAxisGuide = preview.endSnaps.some((snap) => snap.x === preview.selectedStart?.x);
+    const xTrackSnaps = preview.endSnaps.filter((snap) => snap.z === preview.selectedStart?.z);
+    const zTrackSnaps = preview.endSnaps.filter((snap) => snap.x === preview.selectedStart?.x);
+
+    const xSpan = xTrackSnaps.length
+      ? [
+          Math.min(...xTrackSnaps.map((snap) => snap.x), preview.selectedStart.x),
+          Math.max(...xTrackSnaps.map((snap) => snap.x), preview.selectedStart.x),
+        ]
+      : null;
+    const zSpan = zTrackSnaps.length
+      ? [
+          Math.min(...zTrackSnaps.map((snap) => snap.z), preview.selectedStart.z),
+          Math.max(...zTrackSnaps.map((snap) => snap.z), preview.selectedStart.z),
+        ]
+      : null;
     return (
       <>
-        {showXAxisGuide && (
-          <mesh position={[0, planeY - 0.5, preview.selectedStart.z]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[dividers.length ? 2000 : 700, 2]} />
+        {xSpan && (
+          <mesh
+            position={[xSpan[0] + (xSpan[1] - xSpan[0]) / 2, planeY - 0.5, preview.selectedStart.z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[xSpan[1] - xSpan[0], 2]} />
             <meshBasicMaterial color="#fbbf24" opacity={0.35} transparent toneMapped={false} />
           </mesh>
         )}
-        {showZAxisGuide && (
-          <mesh position={[preview.selectedStart.x, planeY - 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[2, dividers.length ? 2000 : 500]} />
+        {zSpan && (
+          <mesh
+            position={[preview.selectedStart.x, planeY - 0.5, zSpan[0] + (zSpan[1] - zSpan[0]) / 2]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[2, zSpan[1] - zSpan[0]]} />
             <meshBasicMaterial color="#34d399" opacity={0.35} transparent toneMapped={false} />
           </mesh>
         )}
