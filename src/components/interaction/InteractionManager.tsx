@@ -6,12 +6,12 @@ import { BasketType } from "../../types/basket";
 import { DividerMesh } from "../geometry/DividerMesh";
 import { getSnapGrid, findClosestSnap } from "./grid";
 import { SPECS } from "../geometry/constants";
+import { useConfigurator } from "../../context/ConfiguratorProvider";
 
 export type InteractionManagerProps = {
   basket: BasketType;
   dividers: Divider[];
   selectedDividerId: string | null;
-  onUpdate: (id: string, updates: Partial<Divider>) => void;
   onSelect: (id: string | null) => void;
   onDeselectAll: () => void;
   controlsRef: React.MutableRefObject<any>;
@@ -27,11 +27,11 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
   basket,
   dividers,
   selectedDividerId,
-  onUpdate,
   onSelect,
   onDeselectAll,
   controlsRef,
 }) => {
+  const { updateDivider } = useConfigurator();
   const { camera, raycaster, pointer } = useThree();
   const [drag, setDrag] = useState<DragState | null>(null);
 
@@ -78,7 +78,7 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
       return;
     }
 
-    onUpdate(drag.dividerId, { length: newLen, offsetAlongAxis: newCenter });
+    updateDivider(drag.dividerId, { length: newLen, offsetAlongAxis: newCenter });
   });
 
   const handleDividerRightClick = (e: ThreeEvent<MouseEvent>, id: string) => {

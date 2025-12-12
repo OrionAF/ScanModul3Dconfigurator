@@ -11,35 +11,22 @@ import {
   Sun,
   Trash2,
 } from "lucide-react";
-import { BasketType } from "../../types/basket";
-import { Divider } from "../../types/divider";
 import { BASKETS } from "../../data/catalog";
+import { useConfigurator } from "../../context/ConfiguratorProvider";
 
-export type ControlsProps = {
-  currentBasket: BasketType;
-  onSelectBasket: (b: BasketType) => void;
-  dividers: Divider[];
-  placementMode: "x" | "z" | "remove" | null;
-  setPlacementMode: (m: "x" | "z" | "remove" | null) => void;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-  cameraView: "iso" | "top" | "front";
-  cameraLocked: boolean;
-  setCameraView: (v: "iso" | "top" | "front") => void;
-};
-
-export const Controls: React.FC<ControlsProps> = ({
-  currentBasket,
-  onSelectBasket,
-  dividers,
-  placementMode,
-  setPlacementMode,
-  isDarkMode,
-  toggleTheme,
-  cameraView,
-  cameraLocked,
-  setCameraView,
-}) => {
+export const Controls: React.FC = () => {
+  const {
+    currentBasket,
+    selectBasket,
+    dividers,
+    placementMode,
+    setPlacementMode,
+    isDarkMode,
+    toggleTheme,
+    cameraView,
+    isCameraLocked,
+    setCameraView,
+  } = useConfigurator();
   const bgClass = isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200";
   const textClass = isDarkMode ? "text-white" : "text-gray-800";
   const subTextClass = isDarkMode ? "text-gray-400" : "text-gray-500";
@@ -92,10 +79,10 @@ export const Controls: React.FC<ControlsProps> = ({
               <button
                 key={view.id}
                 onClick={() => {
-                  if (cameraLocked) return;
+                  if (isCameraLocked) return;
                   setCameraView(view.id as any);
                 }}
-                disabled={cameraLocked}
+                disabled={isCameraLocked}
                 className={`flex-1 py-2 px-3 rounded-md border flex flex-col items-center gap-1 transition-all ${
                   cameraView === view.id
                     ? isDarkMode
@@ -104,14 +91,14 @@ export const Controls: React.FC<ControlsProps> = ({
                     : isDarkMode
                     ? "bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-400"
                     : "bg-white border-gray-200 hover:bg-gray-50 text-gray-600"
-                } ${cameraLocked ? "opacity-60 cursor-not-allowed" : ""}`}
+                } ${isCameraLocked ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 <view.icon className="w-5 h-5" />
                 <span className="text-[10px] font-bold">{view.label}</span>
               </button>
             ))}
           </div>
-          {cameraLocked && (
+          {isCameraLocked && (
             <p className={`text-[11px] mt-2 ${subTextClass}`}>
               Divider selected: camera locked to top view until you deselect.
             </p>
@@ -124,7 +111,7 @@ export const Controls: React.FC<ControlsProps> = ({
             {BASKETS.map((b) => (
               <button
                 key={b.id}
-                onClick={() => onSelectBasket(b)}
+                onClick={() => selectBasket(b)}
                 className={`text-left p-3 rounded-lg border transition-all ${activeClass(currentBasket.id === b.id)}`}
               >
                 <div className={`font-bold text-sm flex justify-between items-center ${textClass}`}>
