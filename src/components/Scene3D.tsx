@@ -8,21 +8,33 @@ import { ItemMesh } from "./geometry/ItemMesh";
 import { useConfigurator } from "../context/ConfiguratorProvider";
 import { useCameraViews } from "../hooks/useCameraViews";
 
-export const Scene3D: React.FC = () => {
-  const {
-    currentBasket: basket,
-    dividers,
-    items,
-    placementMode,
-    selectedDividerId,
-    isCameraLocked,
-    placeDivider,
-    removeDivider,
-    selectDivider,
-    deselectAll,
-    isDarkMode,
-    effectiveCameraView,
-  } = useConfigurator();
+type SceneContentProps = {
+  basket: ReturnType<typeof useConfigurator>["currentBasket"];
+  dividers: ReturnType<typeof useConfigurator>["dividers"];
+  items: ReturnType<typeof useConfigurator>["items"];
+  placementMode: ReturnType<typeof useConfigurator>["placementMode"];
+  selectedDividerId: ReturnType<typeof useConfigurator>["selectedDividerId"];
+  isCameraLocked: ReturnType<typeof useConfigurator>["isCameraLocked"];
+  effectiveCameraView: ReturnType<typeof useConfigurator>["effectiveCameraView"];
+  placeDivider: ReturnType<typeof useConfigurator>["placeDivider"];
+  removeDivider: ReturnType<typeof useConfigurator>["removeDivider"];
+  selectDivider: ReturnType<typeof useConfigurator>["selectDivider"];
+  deselectAll: ReturnType<typeof useConfigurator>["deselectAll"];
+};
+
+const SceneContent: React.FC<SceneContentProps> = ({
+  basket,
+  dividers,
+  items,
+  placementMode,
+  selectedDividerId,
+  isCameraLocked,
+  effectiveCameraView,
+  placeDivider,
+  removeDivider,
+  selectDivider,
+  deselectAll,
+}) => {
   const controlsRef = useRef<any>(null);
   useCameraViews({ view: effectiveCameraView, isLocked: isCameraLocked, controlsRef });
 
@@ -33,7 +45,7 @@ export const Scene3D: React.FC = () => {
 
   const isDrawingMode = placementMode === "x" || placementMode === "z";
 
-  const SceneContent = () => (
+  return (
     <>
       {/* Camera transitions handled via useCameraViews hook */}
       <ambientLight intensity={0.6} />
@@ -86,19 +98,48 @@ export const Scene3D: React.FC = () => {
       </group>
     </>
   );
+};
+
+export const Scene3D: React.FC = () => {
+  const {
+    currentBasket: basket,
+    dividers,
+    items,
+    placementMode,
+    selectedDividerId,
+    isCameraLocked,
+    placeDivider,
+    removeDivider,
+    selectDivider,
+    deselectAll,
+    isDarkMode,
+    effectiveCameraView,
+  } = useConfigurator();
 
   return (
     <Canvas
       shadows
       camera={{ position: [500, 600, 500], fov: 35, near: 10, far: 5000 }}
       dpr={[1, 2]}
-        onContextMenu={(e) => {
-          e.nativeEvent.preventDefault();
-          deselectAll();
-        }}
-      >
-        <color attach="background" args={[isDarkMode ? "#252525" : "#e5e7eb"]} />
-      <SceneContent />
+      onContextMenu={(e) => {
+        e.nativeEvent.preventDefault();
+        deselectAll();
+      }}
+    >
+      <color attach="background" args={[isDarkMode ? "#252525" : "#e5e7eb"]} />
+      <SceneContent
+        basket={basket}
+        dividers={dividers}
+        items={items}
+        placementMode={placementMode}
+        selectedDividerId={selectedDividerId}
+        isCameraLocked={isCameraLocked}
+        effectiveCameraView={effectiveCameraView}
+        placeDivider={placeDivider}
+        removeDivider={removeDivider}
+        selectDivider={selectDivider}
+        deselectAll={deselectAll}
+      />
     </Canvas>
   );
 };
