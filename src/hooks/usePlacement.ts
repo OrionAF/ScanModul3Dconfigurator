@@ -31,35 +31,55 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
 
+  const halfLength = basket.specs.dimensions.internalBottom.length / 2;
+  const halfWidth = basket.specs.dimensions.internalBottom.width / 2;
+
   const xEdges = useMemo(() => {
-    const edges = [xSnaps[0], xSnaps[xSnaps.length - 1]];
+    const edges = [-halfLength, halfLength];
 
     dividers.forEach((divider) => {
       if (divider.axis === "z") edges.push(divider.position);
     });
 
     return Array.from(new Set(edges));
-  }, [dividers, xSnaps]);
+  }, [dividers, halfLength]);
 
   const zEdges = useMemo(() => {
-    const edges = [zSnaps[0], zSnaps[zSnaps.length - 1]];
+    const edges = [-halfWidth, halfWidth];
 
     dividers.forEach((divider) => {
       if (divider.axis === "x") edges.push(divider.position);
     });
 
     return Array.from(new Set(edges));
-  }, [dividers, zSnaps]);
+  }, [dividers, halfWidth]);
 
   const startSnaps = useMemo(() => {
     const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
     const snapMap = new Map<string, SnapPoint>();
 
-    zEdges.forEach((z) => xSnaps.forEach((x) => snapMap.set(keyFor({ x, z }), { x, z })));
-    xEdges.forEach((x) => zSnaps.forEach((z) => snapMap.set(keyFor({ x, z }), { x, z })));
+    const isCorner = (snap: SnapPoint) => {
+      const onXEdge = Math.abs(Math.abs(snap.x) - halfLength) < 1e-3;
+      const onZEdge = Math.abs(Math.abs(snap.z) - halfWidth) < 1e-3;
+      return onXEdge && onZEdge;
+    };
+
+    zEdges.forEach((z) =>
+      xSnaps.forEach((x) => {
+        const snap = { x, z };
+        if (!isCorner(snap)) snapMap.set(keyFor(snap), snap);
+      })
+    );
+
+    xEdges.forEach((x) =>
+      zSnaps.forEach((z) => {
+        const snap = { x, z };
+        if (!isCorner(snap)) snapMap.set(keyFor(snap), snap);
+      })
+    );
 
     return Array.from(snapMap.values());
-  }, [xEdges, xSnaps, zEdges, zSnaps]);
+  }, [halfLength, halfWidth, xEdges, xSnaps, zEdges, zSnaps]);
 
   const endSnaps = useMemo(() => {
     if (!selectedStart) return [];
