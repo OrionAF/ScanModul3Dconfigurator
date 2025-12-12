@@ -827,7 +827,7 @@ const getSnapGrid = (basket: BasketType) => {
   const xPitch = xConfig.gap + xConfig.bar;
 
   const xSnaps: number[] = [];
-  for (let i = 0; i < xConfig.cols; i++) xSnaps.push(xStart + i * xPitch + xConfig.gap / 2);
+  for (let i = 0; i < xConfig.cols; i++) xSnaps.push(xStart + xConfig.gap + xConfig.bar / 2 + i * xPitch);
 
   const zConfig = SPECS.holes.shortSide;
   const zTrackLen = SPECS.dimensions.internalBottom.width;
@@ -835,7 +835,7 @@ const getSnapGrid = (basket: BasketType) => {
   const zPitch = zConfig.gap + zConfig.bar;
 
   const zSnaps: number[] = [];
-  for (let i = 0; i < zConfig.cols; i++) zSnaps.push(zStart + i * zPitch + zConfig.gap / 2);
+  for (let i = 0; i < zConfig.cols; i++) zSnaps.push(zStart + zConfig.gap + zConfig.bar / 2 + i * zPitch);
 
   return { xSnaps, zSnaps };
 };
@@ -874,13 +874,26 @@ const DividerDrawingManager: React.FC<{
     const snapX = findClosestSnap(intersectVec.x, xSnaps);
     const snapZ = findClosestSnap(intersectVec.z, zSnaps);
 
-    setCursorPos({ x: snapX, z: snapZ });
+    setCursorPos((prev) => {
+      if (prev && prev.x === snapX && prev.z === snapZ) return prev;
+      return { x: snapX, z: snapZ };
+    });
 
     if (drawing) {
       if (placementMode === "x") {
-        setDrawing({ ...drawing, currentX: snapX, currentZ: drawing.startZ });
+        setDrawing((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, currentX: snapX, currentZ: prev.startZ };
+          if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
+          return next;
+        });
       } else {
-        setDrawing({ ...drawing, currentX: drawing.startX, currentZ: snapZ });
+        setDrawing((prev) => {
+          if (!prev) return prev;
+          const next = { ...prev, currentX: prev.startX, currentZ: snapZ };
+          if (next.currentX === prev.currentX && next.currentZ === prev.currentZ) return prev;
+          return next;
+        });
       }
     }
   };
@@ -1062,6 +1075,15 @@ const InteractionManager: React.FC<{
 
     const newLen = newEnd - newStart;
     const newCenter = newStart + newLen / 2;
+
+    const currentDivider = dividers.find((d) => d.id === drag.dividerId);
+    if (
+      currentDivider &&
+      currentDivider.length === newLen &&
+      (currentDivider.offsetAlongAxis || 0) === newCenter
+    ) {
+      return;
+    }
 
     onUpdate(drag.dividerId, { length: newLen, offsetAlongAxis: newCenter });
   });
