@@ -1,9 +1,3 @@
-export type BasketType = {
-  id: string;
-  name: string;
-  dimensions: { width: number; depth: number; height: number };
-};
-
 export type BasketSpecs = {
   dimensions: {
     external: { length: number; width: number; height: number };
@@ -38,4 +32,11 @@ export type BasketSpecs = {
     };
   };
   rim: { width: number };
+};
+
+export type BasketType = {
+  id: string;
+  name: string;
+  dimensions: { width: number; depth: number; height: number };
+  specs: BasketSpecs;
 };

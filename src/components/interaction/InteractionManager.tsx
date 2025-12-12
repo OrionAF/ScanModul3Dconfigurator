@@ -5,7 +5,6 @@ import { Divider } from "../../types/divider";
 import { BasketType } from "../../types/basket";
 import { DividerMesh } from "../geometry/DividerMesh";
 import { getSnapGrid, findClosestSnap } from "./grid";
-import { SPECS } from "../geometry/constants";
 import { useConfigurator } from "../../context/ConfiguratorProvider";
 
 export type InteractionManagerProps = {
@@ -40,6 +39,8 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
   const intersectionVec = useMemo(() => new THREE.Vector3(), []);
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
+
+  const { length: bottomLength, width: bottomWidth } = basket.specs.dimensions.internalBottom;
 
   const getPlaneIntersection = () => {
     raycaster.setFromCamera(pointer, camera);
@@ -117,14 +118,14 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
     if (axis === "x") {
       return (
         <mesh position={[0, planeY - 0.5, pos]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[SPECS.dimensions.internalBottom.length, 3]} />
+          <planeGeometry args={[bottomLength, 3]} />
           <meshBasicMaterial color="#fbbf24" opacity={0.6} transparent toneMapped={false} />
         </mesh>
       );
     }
     return (
       <mesh position={[pos, planeY - 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[3, SPECS.dimensions.internalBottom.width]} />
+        <planeGeometry args={[3, bottomWidth]} />
         <meshBasicMaterial color="#34d399" opacity={0.6} transparent toneMapped={false} />
       </mesh>
     );
