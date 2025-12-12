@@ -18,11 +18,12 @@ type UsePlacementProps = {
   basket: BasketType;
   placementMode: PlacementMode;
   onPlace: (pos: number, axis: "x" | "z", length: number, offset: number) => void;
+  dividers: Divider[];
 };
 
 const MIN_DIVIDER_LENGTH = 40;
 
-export const usePlacement = ({ basket, placementMode, onPlace }: UsePlacementProps) => {
+export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePlacementProps) => {
   const [selectedStart, setSelectedStart] = useState<SnapPoint | null>(null);
   const [hoveredEnd, setHoveredEnd] = useState<SnapPoint | null>(null);
 
@@ -30,21 +31,61 @@ export const usePlacement = ({ basket, placementMode, onPlace }: UsePlacementPro
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
 
-  const startSnaps = useMemo(() => xSnaps.flatMap((x) => zSnaps.map((z) => ({ x, z }))), [xSnaps, zSnaps]);
+  const xEdges = useMemo(() => {
+    const edges = [xSnaps[0], xSnaps[xSnaps.length - 1]];
+
+    dividers.forEach((divider) => {
+      if (divider.axis === "z") edges.push(divider.position);
+    });
+
+    return Array.from(new Set(edges));
+  }, [dividers, xSnaps]);
+
+  const zEdges = useMemo(() => {
+    const edges = [zSnaps[0], zSnaps[zSnaps.length - 1]];
+
+    dividers.forEach((divider) => {
+      if (divider.axis === "x") edges.push(divider.position);
+    });
+
+    return Array.from(new Set(edges));
+  }, [dividers, zSnaps]);
+
+  const startSnaps = useMemo(() => {
+    const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
+    const snapMap = new Map<string, SnapPoint>();
+
+    zEdges.forEach((z) => xSnaps.forEach((x) => snapMap.set(keyFor({ x, z }), { x, z })));
+    xEdges.forEach((x) => zSnaps.forEach((z) => snapMap.set(keyFor({ x, z }), { x, z })));
+
+    return Array.from(snapMap.values());
+  }, [xEdges, xSnaps, zEdges, zSnaps]);
 
   const endSnaps = useMemo(() => {
     if (!selectedStart) return [];
 
-    const alongX = xSnaps.map((x) => ({ x, z: selectedStart.z }));
-    const alongZ = zSnaps.map((z) => ({ x: selectedStart.x, z }));
-
     const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
-    const merged = [...alongX, ...alongZ].filter((snap) => keyFor(snap) !== keyFor(selectedStart));
+    const candidates: SnapPoint[] = [];
+
+    const xEdgeSet = new Set(xEdges);
+    const zEdgeSet = new Set(zEdges);
+
+    if (zEdgeSet.has(selectedStart.z)) {
+      zEdges
+        .filter((z) => z !== selectedStart.z)
+        .forEach((z) => candidates.push({ x: selectedStart.x, z }));
+    }
+
+    if (xEdgeSet.has(selectedStart.x)) {
+      xEdges
+        .filter((x) => x !== selectedStart.x)
+        .forEach((x) => candidates.push({ x, z: selectedStart.z }));
+    }
 
     const seen = new Map<string, SnapPoint>();
-    merged.forEach((snap) => seen.set(keyFor(snap), snap));
+    candidates.forEach((snap) => seen.set(keyFor(snap), snap));
     return Array.from(seen.values());
-  }, [selectedStart, xSnaps, zSnaps]);
+  }, [selectedStart, xEdges, zEdges]);
 
   useEffect(() => {
     if (placementMode !== "divider") {
@@ -56,7 +97,7 @@ export const usePlacement = ({ basket, placementMode, onPlace }: UsePlacementPro
   useEffect(() => {
     setSelectedStart(null);
     setHoveredEnd(null);
-  }, [xSnaps, zSnaps]);
+  }, [xEdges, xSnaps, zEdges, zSnaps]);
 
   const computeDivider = useCallback(
     (start: SnapPoint, end: SnapPoint): Divider | null => {

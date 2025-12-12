@@ -16,6 +16,7 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
   const { preview, planeY, setHoveredEnd, handleStartClick, handleEndClick } = usePlacement({
     basket,
     placementMode,
+    dividers,
     onPlace,
   });
 
