@@ -84,16 +84,22 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
 
   const TrackGuides = () => {
     if (!preview.selectedStart) return null;
+    const showXAxisGuide = preview.endSnaps.some((snap) => snap.z === preview.selectedStart?.z);
+    const showZAxisGuide = preview.endSnaps.some((snap) => snap.x === preview.selectedStart?.x);
     return (
       <>
-        <mesh position={[0, planeY - 0.5, preview.selectedStart.z]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[dividers.length ? 2000 : 700, 2]} />
-          <meshBasicMaterial color="#fbbf24" opacity={0.35} transparent toneMapped={false} />
-        </mesh>
-        <mesh position={[preview.selectedStart.x, planeY - 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[2, dividers.length ? 2000 : 500]} />
-          <meshBasicMaterial color="#34d399" opacity={0.35} transparent toneMapped={false} />
-        </mesh>
+        {showXAxisGuide && (
+          <mesh position={[0, planeY - 0.5, preview.selectedStart.z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[dividers.length ? 2000 : 700, 2]} />
+            <meshBasicMaterial color="#fbbf24" opacity={0.35} transparent toneMapped={false} />
+          </mesh>
+        )}
+        {showZAxisGuide && (
+          <mesh position={[preview.selectedStart.x, planeY - 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[2, dividers.length ? 2000 : 500]} />
+            <meshBasicMaterial color="#34d399" opacity={0.35} transparent toneMapped={false} />
+          </mesh>
+        )}
       </>
     );
   };

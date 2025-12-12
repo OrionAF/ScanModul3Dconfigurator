@@ -4,7 +4,7 @@ import { Divider } from "../types/divider";
 import { getSnapGrid } from "../components/interaction/grid";
 import { PlacementMode } from "../context/ConfiguratorProvider";
 
-export type SnapPoint = { x: number; z: number };
+export type SnapPoint = { x: number; z: number; side?: "x" | "z" };
 
 export type PlacementPreview = {
   dividerPreview: Divider | null;
@@ -58,8 +58,22 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
     const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
     const snapMap = new Map<string, SnapPoint>();
 
-    zEdges.forEach((z) => xSnaps.forEach((x) => snapMap.set(keyFor({ x, z }), { x, z })));
-    xEdges.forEach((x) => zSnaps.forEach((z) => snapMap.set(keyFor({ x, z }), { x, z })));
+    const xEdgeSet = new Set(xEdges);
+    const zEdgeSet = new Set(zEdges);
+
+    zEdges.forEach((z) =>
+      xSnaps.forEach((x) => {
+        if (xEdgeSet.has(x)) return; // corner point, skip
+        snapMap.set(keyFor({ x, z }), { x, z, side: "z" });
+      })
+    );
+
+    xEdges.forEach((x) =>
+      zSnaps.forEach((z) => {
+        if (zEdgeSet.has(z)) return; // corner point, skip
+        snapMap.set(keyFor({ x, z }), { x, z, side: "x" });
+      })
+    );
 
     return Array.from(snapMap.values());
   }, [xEdges, xSnaps, zEdges, zSnaps]);
@@ -73,13 +87,20 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
     const xEdgeSet = new Set(xEdges);
     const zEdgeSet = new Set(zEdges);
 
-    if (zEdgeSet.has(selectedStart.z)) {
+    const allowZAxis = selectedStart.side
+      ? selectedStart.side === "z"
+      : zEdgeSet.has(selectedStart.z) && !xEdgeSet.has(selectedStart.x);
+    const allowXAxis = selectedStart.side
+      ? selectedStart.side === "x"
+      : xEdgeSet.has(selectedStart.x) && !zEdgeSet.has(selectedStart.z);
+
+    if (allowZAxis) {
       zEdges
         .filter((z) => z !== selectedStart.z)
         .forEach((z) => candidates.push({ x: selectedStart.x, z }));
     }
 
-    if (xEdgeSet.has(selectedStart.x)) {
+    if (allowXAxis) {
       xEdges
         .filter((x) => x !== selectedStart.x)
         .forEach((x) => candidates.push({ x, z: selectedStart.z }));
