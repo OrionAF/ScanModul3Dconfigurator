@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
+import { BasketSnapMap, SnapPoint, snapKey } from "../types/placement";
 import { getSnapGrid } from "../components/interaction/grid";
 import { PlacementMode } from "../context/ConfiguratorProvider";
-
-export type SnapPoint = { x: number; z: number; side?: "x" | "z" };
+import { getBasketSnapMap } from "../data/basketSnapMaps";
 
 export type PlacementPreview = {
   dividerPreview: Divider | null;
@@ -31,85 +31,80 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
 
-  const halfLength = basket.specs.dimensions.internalBottom.length / 2;
-  const halfWidth = basket.specs.dimensions.internalBottom.width / 2;
+  const staticSnapMap: BasketSnapMap | undefined = useMemo(
+    () => getBasketSnapMap(basket.id),
+    [basket.id]
+  );
 
-  const xEdges = useMemo(() => {
-    const edges = [-halfLength, halfLength];
+  const dividerXEdges = useMemo(
+    () => dividers.filter((divider) => divider.axis === "x").map((divider) => divider.position),
+    [dividers]
+  );
 
-    dividers.forEach((divider) => {
-      if (divider.axis === "z") edges.push(divider.position);
+  const dividerZEdges = useMemo(
+    () => dividers.filter((divider) => divider.axis === "z").map((divider) => divider.position),
+    [dividers]
+  );
+
+  const { startSnaps, adjacency } = useMemo(() => {
+    const startMap = new Map<string, SnapPoint>();
+    const adjacencyMap = new Map<string, SnapPoint[]>();
+
+    const addSnap = (snap: SnapPoint, targets: SnapPoint[]) => {
+      const key = snapKey(snap);
+      startMap.set(key, snap);
+
+      const existingTargets = adjacencyMap.get(key) ?? [];
+      const seenTargets = new Set(existingTargets.map(snapKey));
+      const mergedTargets = [...existingTargets];
+
+      targets.forEach((target) => {
+        const targetKey = snapKey(target);
+        if (!seenTargets.has(targetKey)) {
+          mergedTargets.push(target);
+          seenTargets.add(targetKey);
+        }
+      });
+
+      adjacencyMap.set(key, mergedTargets);
+    };
+
+    staticSnapMap?.startSnaps.forEach((snap) => {
+      const targets = staticSnapMap.adjacency[snapKey(snap)] ?? [];
+      addSnap(snap, targets);
     });
 
-    return Array.from(new Set(edges));
-  }, [dividers, halfLength]);
+    const dividerXEdgeSet = new Set(dividerXEdges);
+    const dividerZEdgeSet = new Set(dividerZEdges);
 
-  const zEdges = useMemo(() => {
-    const edges = [-halfWidth, halfWidth];
-
-    dividers.forEach((divider) => {
-      if (divider.axis === "x") edges.push(divider.position);
-    });
-
-    return Array.from(new Set(edges));
-  }, [dividers, halfWidth]);
-
-  const startSnaps = useMemo(() => {
-    const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
-    const snapMap = new Map<string, SnapPoint>();
-
-    const xEdgeSet = new Set(xEdges);
-    const zEdgeSet = new Set(zEdges);
-
-    zEdges.forEach((z) =>
+    dividerXEdges.forEach((zEdge) => {
       xSnaps.forEach((x) => {
-        if (xEdgeSet.has(x)) return; // corner point, skip
-        snapMap.set(keyFor({ x, z }), { x, z, side: "z" });
-      })
-    );
+        if (dividerZEdgeSet.has(x)) return; // avoid corners
+        const snap = { x, z: zEdge, side: "z" as const };
+        const targets = zSnaps.filter((z) => z !== zEdge).map((z) => ({ x, z }));
+        addSnap(snap, targets);
+      });
+    });
 
-    xEdges.forEach((x) =>
+    dividerZEdges.forEach((xEdge) => {
       zSnaps.forEach((z) => {
-        if (zEdgeSet.has(z)) return; // corner point, skip
-        snapMap.set(keyFor({ x, z }), { x, z, side: "x" });
-      })
-    );
+        if (dividerXEdgeSet.has(z)) return; // avoid corners
+        const snap = { x: xEdge, z, side: "x" as const };
+        const targets = xSnaps.filter((x) => x !== xEdge).map((x) => ({ x, z }));
+        addSnap(snap, targets);
+      });
+    });
 
-    return Array.from(snapMap.values());
-  }, [xEdges, xSnaps, zEdges, zSnaps]);
+    return {
+      startSnaps: Array.from(startMap.values()),
+      adjacency: Object.fromEntries(Array.from(adjacencyMap.entries())),
+    };
+  }, [dividerXEdges, dividerZEdges, staticSnapMap, xSnaps, zSnaps]);
 
   const endSnaps = useMemo(() => {
     if (!selectedStart) return [];
-
-    const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
-    const candidates: SnapPoint[] = [];
-
-    const xEdgeSet = new Set(xEdges);
-    const zEdgeSet = new Set(zEdges);
-
-    const allowZAxis = selectedStart.side
-      ? selectedStart.side === "z"
-      : zEdgeSet.has(selectedStart.z) && !xEdgeSet.has(selectedStart.x);
-    const allowXAxis = selectedStart.side
-      ? selectedStart.side === "x"
-      : xEdgeSet.has(selectedStart.x) && !zEdgeSet.has(selectedStart.z);
-
-    if (allowZAxis) {
-      zSnaps
-        .filter((z) => z !== selectedStart.z)
-        .forEach((z) => candidates.push({ x: selectedStart.x, z }));
-    }
-
-    if (allowXAxis) {
-      xSnaps
-        .filter((x) => x !== selectedStart.x)
-        .forEach((x) => candidates.push({ x, z: selectedStart.z }));
-    }
-
-    const seen = new Map<string, SnapPoint>();
-    candidates.forEach((snap) => seen.set(keyFor(snap), snap));
-    return Array.from(seen.values());
-  }, [selectedStart, xEdges, xSnaps, zEdges, zSnaps]);
+    return adjacency[snapKey(selectedStart)] ?? [];
+  }, [adjacency, selectedStart]);
 
   useEffect(() => {
     if (placementMode !== "divider") {
@@ -121,7 +116,7 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
   useEffect(() => {
     setSelectedStart(null);
     setHoveredEnd(null);
-  }, [xEdges, xSnaps, zEdges, zSnaps]);
+  }, [adjacency, startSnaps]);
 
   const computeDivider = useCallback(
     (start: SnapPoint, end: SnapPoint): Divider | null => {
