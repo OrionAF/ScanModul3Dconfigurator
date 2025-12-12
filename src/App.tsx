@@ -1033,8 +1033,9 @@ const InteractionManager: React.FC<{
   selectedDividerId: string | null;
   onUpdate: (id: string, updates: Partial<Divider>) => void;
   onSelect: (id: string | null) => void;
+  onDeselectAll: () => void;
   controlsRef: React.MutableRefObject<any>;
-}> = ({ basket, dividers, selectedDividerId, onUpdate, onSelect, controlsRef }) => {
+}> = ({ basket, dividers, selectedDividerId, onUpdate, onSelect, onDeselectAll, controlsRef }) => {
   const { camera, raycaster, pointer } = useThree();
   const [drag, setDrag] = useState<DragState | null>(null);
 
@@ -1162,7 +1163,8 @@ const InteractionManager: React.FC<{
         position={[0, planeY - 1, 0]}
         onContextMenu={(e) => {
           e.stopPropagation();
-          onSelect(null);
+          e.preventDefault();
+          onDeselectAll();
         }}
       >
         <planeGeometry args={[2000, 2000]} />
@@ -1214,6 +1216,7 @@ const Scene3D: React.FC<{
   onRemoveDivider: (id: string) => void;
   onUpdateDivider: (id: string, updates: Partial<Divider>) => void;
   onSelectDivider: (id: string | null) => void;
+  onDeselectAll: () => void;
   isDarkMode: boolean;
   cameraView: "iso" | "top" | "front";
 }> = ({
@@ -1226,6 +1229,7 @@ const Scene3D: React.FC<{
   onRemoveDivider,
   onUpdateDivider,
   onSelectDivider,
+  onDeselectAll,
   isDarkMode,
   cameraView,
 }) => {
@@ -1270,6 +1274,7 @@ const Scene3D: React.FC<{
           selectedDividerId={selectedDividerId}
           onUpdate={onUpdateDivider}
           onSelect={handleWrapperSelect}
+          onDeselectAll={onDeselectAll}
           controlsRef={controlsRef}
         />
 
@@ -1296,7 +1301,10 @@ const Scene3D: React.FC<{
       shadows
       camera={{ position: [500, 600, 500], fov: 35, near: 10, far: 5000 }}
       dpr={[1, 2]}
-      onContextMenu={(e) => e.nativeEvent.preventDefault()}
+      onContextMenu={(e) => {
+        e.nativeEvent.preventDefault();
+        onDeselectAll();
+      }}
     >
       <color attach="background" args={[isDarkMode ? "#252525" : "#e5e7eb"]} />
       <SceneContent />
@@ -1592,6 +1600,11 @@ export default function App() {
     setSelectedDividerId(id);
   };
 
+  const handleDeselectAll = () => {
+    setPlacementMode(null);
+    setSelectedDividerId(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -1637,6 +1650,7 @@ export default function App() {
           onRemoveDivider={handleRemoveDivider}
           onUpdateDivider={handleUpdateDivider}
           onSelectDivider={handleSelectDivider}
+          onDeselectAll={handleDeselectAll}
           isDarkMode={isDarkMode}
           cameraView={cameraView}
         />
