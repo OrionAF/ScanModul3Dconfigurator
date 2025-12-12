@@ -827,7 +827,7 @@ const getSnapGrid = (basket: BasketType) => {
   const xPitch = xConfig.gap + xConfig.bar;
 
   const xSnaps: number[] = [];
-  for (let i = 0; i < xConfig.cols; i++) xSnaps.push(xStart + i * xPitch + xConfig.gap / 2);
+  for (let i = 0; i < xConfig.cols; i++) xSnaps.push(xStart + xConfig.gap + xConfig.bar / 2 + i * xPitch);
 
   const zConfig = SPECS.holes.shortSide;
   const zTrackLen = SPECS.dimensions.internalBottom.width;
@@ -835,7 +835,7 @@ const getSnapGrid = (basket: BasketType) => {
   const zPitch = zConfig.gap + zConfig.bar;
 
   const zSnaps: number[] = [];
-  for (let i = 0; i < zConfig.cols; i++) zSnaps.push(zStart + i * zPitch + zConfig.gap / 2);
+  for (let i = 0; i < zConfig.cols; i++) zSnaps.push(zStart + zConfig.gap + zConfig.bar / 2 + i * zPitch);
 
   return { xSnaps, zSnaps };
 };
