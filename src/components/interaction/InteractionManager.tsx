@@ -168,7 +168,7 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
         position={[0, planeY - 1, 0]}
         onContextMenu={(e) => {
           e.stopPropagation();
-          e.preventDefault();
+          e.nativeEvent.preventDefault();
           onDeselectAll();
         }}
       >
