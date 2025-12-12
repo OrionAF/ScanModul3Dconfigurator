@@ -4,7 +4,6 @@ import * as THREE from "three";
 import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
 import { getSnapGrid, findClosestSnap } from "../components/interaction/grid";
-import { SPECS } from "../components/geometry/constants";
 
 export type PlacementDrawingState = {
   startX: number;
@@ -90,24 +89,26 @@ export const usePlacement = ({ basket, placementMode, onPlace }: UsePlacementPro
     if (!drawing) return;
     const { startX, startZ, currentX, currentZ, axis } = drawing;
 
+    const { length: bottomLength, width: bottomWidth } = basket.specs.dimensions.internalBottom;
+
     if (axis === "x") {
       const minX = Math.min(startX, currentX);
       const maxX = Math.max(startX, currentX);
       const length = Math.max(40, maxX - minX);
       const center = (minX + maxX) / 2;
-      if (length <= 40) onPlace(startZ, "x", SPECS.dimensions.internalBottom.length, 0);
+      if (length <= 40) onPlace(startZ, "x", bottomLength, 0);
       else onPlace(startZ, "x", length, center);
     } else {
       const minZ = Math.min(startZ, currentZ);
       const maxZ = Math.max(startZ, currentZ);
       const length = Math.max(40, maxZ - minZ);
       const center = (minZ + maxZ) / 2;
-      if (length <= 40) onPlace(startX, "z", SPECS.dimensions.internalBottom.width, 0);
+      if (length <= 40) onPlace(startX, "z", bottomWidth, 0);
       else onPlace(startX, "z", length, center);
     }
 
     setDrawing(null);
-  }, [drawing, onPlace]);
+  }, [basket, drawing, onPlace]);
 
   const dividerPreview = useMemo(() => {
     if (!drawing) return null;

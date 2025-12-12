@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
 import { BASKETS } from "../data/catalog";
-import { SPECS } from "../components/geometry/constants";
 import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
 import { PlacedItem } from "../types/item";
@@ -56,7 +55,10 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const placeDivider = useCallback(
     (position: number, axis: "x" | "z", length?: number, offset?: number) => {
       const finalLength =
-        length || (axis === "x" ? SPECS.dimensions.internalBottom.length : SPECS.dimensions.internalBottom.width);
+        length ||
+        (axis === "x"
+          ? currentBasket.specs.dimensions.internalBottom.length
+          : currentBasket.specs.dimensions.internalBottom.width);
 
       const height = currentBasket.dimensions.height;
 
@@ -71,7 +73,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       setDividers((prev) => [...prev, newDivider]);
     },
-    [currentBasket.dimensions.height]
+    [currentBasket]
   );
 
   const updateDivider = useCallback((id: string, updates: Partial<Divider>) => {
