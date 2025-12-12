@@ -1599,8 +1599,12 @@ export default function App() {
   }, [placementMode, selectedDividerId]);
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden ${isDarkMode ? "bg-[#252525]" : "bg-gray-100"}`}>
-      <div className="flex-1 relative">
+    <div
+      className={`flex flex-col lg:flex-row min-h-screen h-dvh w-full ${
+        isDarkMode ? "bg-[#252525]" : "bg-gray-100"
+      }`}
+    >
+      <div className="flex-1 relative min-w-0 min-h-[50vh] lg:min-h-0">
         <Scene3D
           basket={currentBasket}
           dividers={dividers}
@@ -1629,7 +1633,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="w-[400px] flex-shrink-0 z-10">
+      <div className="w-full lg:w-[400px] flex-shrink-0 z-10 max-h-[45vh] lg:max-h-none overflow-y-auto">
         <Controls
           currentBasket={currentBasket}
           onSelectBasket={handleSelectBasket}
