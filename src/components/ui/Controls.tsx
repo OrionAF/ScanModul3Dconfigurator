@@ -22,6 +22,7 @@ export const Controls: React.FC = () => {
     currentBasket,
     selectBasket,
     dividers,
+    items,
     placementMode,
     setPlacementMode,
     isDarkMode,
@@ -29,6 +30,7 @@ export const Controls: React.FC = () => {
     cameraView,
     isCameraLocked,
     setCameraView,
+    reset,
   } = useConfigurator();
 
   const textClass = isDarkMode ? "text-white" : "text-gray-800";
@@ -36,6 +38,38 @@ export const Controls: React.FC = () => {
   const borderClass = isDarkMode ? "border-gray-700" : "border-gray-200";
   const mutedBgClass = isDarkMode ? "bg-gray-800/70" : "bg-gray-50";
   const hintTextClass = isDarkMode ? "text-gray-500" : "text-gray-400";
+
+  const handleExport = async () => {
+    const payload = {
+      basket: currentBasket,
+      dividers,
+      items,
+      generatedAt: new Date().toISOString(),
+    };
+
+    const json = JSON.stringify(payload, null, 2);
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(json);
+        window.alert("Configuration copied to clipboard.");
+        return;
+      }
+    } catch (error) {
+      console.error("Clipboard export failed", error);
+    }
+
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `config-${currentBasket.id}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    window.alert("Configuration downloaded as JSON.");
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -195,11 +229,21 @@ export const Controls: React.FC = () => {
 
         <PanelSection title="Export / Actions" isDarkMode={isDarkMode}>
           <div className="grid grid-cols-2 gap-3">
-            <Button isDarkMode={isDarkMode} variant="muted" className="p-3 flex items-center gap-2">
+            <Button
+              isDarkMode={isDarkMode}
+              variant="muted"
+              className="p-3 flex items-center gap-2"
+              onClick={handleExport}
+            >
               <Box className="w-4 h-4" />
               <span className="text-sm font-semibold">Export Config</span>
             </Button>
-            <Button isDarkMode={isDarkMode} variant="muted" className="p-3 flex items-center gap-2">
+            <Button
+              isDarkMode={isDarkMode}
+              variant="muted"
+              className="p-3 flex items-center gap-2"
+              onClick={reset}
+            >
               <Trash2 className="w-4 h-4" />
               <span className="text-sm font-semibold">Clear All</span>
             </Button>
