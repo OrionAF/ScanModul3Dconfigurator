@@ -17,6 +17,7 @@ type ConfiguratorContextValue = {
   cameraView: CameraView;
   effectiveCameraView: CameraView;
   isCameraLocked: boolean;
+  reset: () => void;
   setPlacementMode: (mode: PlacementMode) => void;
   setCameraView: (view: CameraView) => void;
   toggleTheme: () => void;
@@ -94,6 +95,13 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setSelectedDividerId(null);
   }, []);
 
+  const reset = useCallback(() => {
+    setDividers([]);
+    setItems([]);
+    setPlacementMode(null);
+    setSelectedDividerId(null);
+  }, []);
+
   const toggleTheme = useCallback(() => setIsDarkMode((prev) => !prev), []);
 
   const value = useMemo(
@@ -107,6 +115,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       cameraView,
       effectiveCameraView,
       isCameraLocked,
+      reset,
       setPlacementMode,
       setCameraView,
       toggleTheme,
@@ -129,6 +138,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       placeDivider,
       placementMode,
       removeDivider,
+      reset,
       selectBasket,
       selectDivider,
       toggleTheme,
