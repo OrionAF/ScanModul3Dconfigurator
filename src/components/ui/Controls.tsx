@@ -24,8 +24,8 @@ export const Controls: React.FC = () => {
     dividers,
     items,
     placementMode,
-    setPlacementMode,
-    isDarkMode,
+      setPlacementMode,
+      isDarkMode,
     toggleTheme,
     cameraView,
     isCameraLocked,
@@ -150,37 +150,21 @@ export const Controls: React.FC = () => {
         </PanelSection>
 
         <PanelSection title="2. Divider Tools" isDarkMode={isDarkMode}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={() => {
-                setPlacementMode((prev) => (prev === "z" ? null : "z"));
+                setPlacementMode((prev) => (prev === "divider" ? null : "divider"));
               }}
               isDarkMode={isDarkMode}
-              active={placementMode === "z"}
+              active={placementMode === "divider"}
               className="p-3 flex flex-col items-center gap-2 transition-all text-xs font-bold"
             >
               <div className="flex items-center gap-1">
                 <PenTool className="w-4 h-4" />
-                <span>Place</span>
+                <span>Divider mode</span>
               </div>
-              <span className={subTextClass}>Y-axis</span>
-              <span className={`text-[10px] ${hintTextClass}`}>Shortcut: 1</span>
-            </Button>
-
-            <Button
-              onClick={() => {
-                setPlacementMode((prev) => (prev === "x" ? null : "x"));
-              }}
-              isDarkMode={isDarkMode}
-              active={placementMode === "x"}
-              className="p-3 flex flex-col items-center gap-2 transition-all text-xs font-bold"
-            >
-              <div className="flex items-center gap-1">
-                <PenTool className="w-4 h-4" />
-                <span>Place</span>
-              </div>
-              <span className={subTextClass}>X-axis</span>
-              <span className={`text-[10px] ${hintTextClass}`}>Shortcut: 2</span>
+              <span className={subTextClass}>Snap start → snap end</span>
+              <span className={`text-[10px] ${hintTextClass}`}>Shortcut: 1 (Esc to cancel)</span>
             </Button>
 
             <Button
@@ -194,12 +178,14 @@ export const Controls: React.FC = () => {
                 <span>Remove</span>
               </div>
               <span className={subTextClass}>Delete dividers</span>
-              <span className={`text-[10px] ${hintTextClass}`}>Shortcut: Esc</span>
+              <span className={`text-[10px] ${hintTextClass}`}>Shortcut: Esc to exit</span>
             </Button>
           </div>
           <p className={`text-[11px] mt-2 leading-relaxed ${subTextClass}`}>
-            • Click in the basket to start a divider. Drag to set custom length. Shift-drag will be full length.
-            <br />• Right-click a divider to select. Drag yellow handles to resize. Press Delete to remove selected.
+            • Toggle Divider mode and click a snap point to start. Click a second snap on the same track or crossing to
+            place the divider.
+            <br />• Right-click a divider to select. Drag the yellow handles to resize when placement mode is off. Press
+            Delete to remove selected.
           </p>
         </PanelSection>
 

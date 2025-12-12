@@ -40,65 +40,61 @@ const SceneContent: React.FC<SceneContentProps> = ({
 
   const handleWrapperSelect = (id: string | null) => {
     if (placementMode === "remove" && id) removeDivider(id);
-    else selectDivider(id);
+    else if (placementMode !== "divider") selectDivider(id);
   };
 
-  const isDrawingMode = placementMode === "x" || placementMode === "z";
+  const isDrawingMode = placementMode === "divider";
 
   return (
     <>
       {/* Camera transitions handled via useCameraViews hook */}
-      <ambientLight intensity={0.6} />
-      <directionalLight
-        position={[400, 800, 400]}
-        intensity={1.8}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0005}
-      />
-      <directionalLight position={[-400, 300, -200]} intensity={0.5} color="#dbeafe" />
-      <Environment preset="city" />
+        <ambientLight intensity={0.6} />
+        <directionalLight
+          position={[400, 800, 400]}
+          intensity={1.8}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0005}
+        />
+        <directionalLight position={[-400, 300, -200]} intensity={0.5} color="#dbeafe" />
+        <Environment preset="city" />
 
-      <OrbitControls
-        ref={controlsRef}
-        makeDefault
-        minPolarAngle={0}
-        maxPolarAngle={Math.PI / 2.1}
-        enabled={!isDrawingMode}
-        enableRotate={!isCameraLocked}
-        enablePan={!isCameraLocked}
-      />
-
-      <group>
-        <ScanmodulBasket height={basket.dimensions.height} />
-
-        <InteractionManager
-          basket={basket}
-          dividers={dividers}
-          selectedDividerId={selectedDividerId}
-          onSelect={handleWrapperSelect}
-          onDeselectAll={deselectAll}
-          controlsRef={controlsRef}
+        <OrbitControls
+          ref={controlsRef}
+          makeDefault
+          minPolarAngle={0}
+          maxPolarAngle={Math.PI / 2.1}
+          enabled={!isDrawingMode}
+          enableRotate={!isCameraLocked}
+          enablePan={!isCameraLocked}
         />
 
-        {isDrawingMode && (
-          <PlacementPlane
+        <group>
+          <ScanmodulBasket height={basket.dimensions.height} />
+
+          <InteractionManager
             basket={basket}
-            placementMode={placementMode as "x" | "z"}
             dividers={dividers}
-            onPlace={placeDivider as any}
+            selectedDividerId={selectedDividerId}
+            onSelect={handleWrapperSelect}
+            onDeselectAll={deselectAll}
+            controlsRef={controlsRef}
+            placementMode={placementMode}
           />
-        )}
 
-        {items.map((item) => (
-          <ItemMesh key={item.instanceId} item={item} />
-        ))}
+          {isDrawingMode && (
+            <PlacementPlane basket={basket} placementMode={placementMode} dividers={dividers} onPlace={placeDivider as any} />
+          )}
 
-        <ContactShadows position={[0, -2, 0]} opacity={0.6} scale={1200} blur={2} far={100} color="#000000" />
-      </group>
-    </>
-  );
-};
+          {items.map((item) => (
+            <ItemMesh key={item.instanceId} item={item} />
+          ))}
+
+          <ContactShadows position={[0, -2, 0]} opacity={0.6} scale={1200} blur={2} far={100} color="#000000" />
+        </group>
+      </>
+    );
+  };
 
 export const Scene3D: React.FC = () => {
   const {

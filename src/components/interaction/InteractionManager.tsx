@@ -6,6 +6,7 @@ import { BasketType } from "../../types/basket";
 import { DividerMesh } from "../geometry/DividerMesh";
 import { getSnapGrid, findClosestSnap } from "./grid";
 import { useConfigurator } from "../../context/ConfiguratorProvider";
+import { PlacementMode } from "../../context/ConfiguratorProvider";
 
 export type InteractionManagerProps = {
   basket: BasketType;
@@ -14,6 +15,7 @@ export type InteractionManagerProps = {
   onSelect: (id: string | null) => void;
   onDeselectAll: () => void;
   controlsRef: React.MutableRefObject<any>;
+  placementMode: PlacementMode;
 };
 
 type DragState = {
@@ -29,6 +31,7 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
   onSelect,
   onDeselectAll,
   controlsRef,
+  placementMode,
 }) => {
   const { updateDivider } = useConfigurator();
   const { camera, raycaster, pointer } = useThree();
@@ -83,11 +86,13 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
   });
 
   const handleDividerRightClick = (e: ThreeEvent<MouseEvent>, id: string) => {
+    if (placementMode === "divider") return;
     if (selectedDividerId && selectedDividerId !== id) return;
     onSelect(id);
   };
 
   const handleHandleDown = (e: ThreeEvent<PointerEvent>, dividerId: string, part: "start" | "end") => {
+    if (placementMode === "divider") return;
     const divider = dividers.find((d) => d.id === dividerId);
     if (!divider) return;
 
@@ -109,6 +114,13 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
     window.addEventListener("pointerup", handleUp);
     return () => window.removeEventListener("pointerup", handleUp);
   }, [drag, controlsRef]);
+
+  useEffect(() => {
+    if (placementMode === "divider") {
+      setDrag(null);
+      if (controlsRef.current) controlsRef.current.enabled = true;
+    }
+  }, [controlsRef, placementMode]);
 
   const ResizeGuide = () => {
     if (!drag) return null;

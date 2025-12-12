@@ -4,7 +4,7 @@ import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
 import { PlacedItem } from "../types/item";
 
-export type PlacementMode = "x" | "z" | "remove" | null;
+export type PlacementMode = "divider" | "remove" | null;
 export type CameraView = "iso" | "top" | "front";
 
 type ConfiguratorContextValue = {
