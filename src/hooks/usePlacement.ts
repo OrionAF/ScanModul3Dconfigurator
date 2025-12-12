@@ -31,25 +31,28 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
 
   const { xSnaps, zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
 
+  const halfLength = basket.specs.dimensions.internalBottom.length / 2;
+  const halfWidth = basket.specs.dimensions.internalBottom.width / 2;
+
   const xEdges = useMemo(() => {
-    const edges = [xSnaps[0], xSnaps[xSnaps.length - 1]];
+    const edges = [-halfLength, halfLength];
 
     dividers.forEach((divider) => {
       if (divider.axis === "z") edges.push(divider.position);
     });
 
     return Array.from(new Set(edges));
-  }, [dividers, xSnaps]);
+  }, [dividers, halfLength]);
 
   const zEdges = useMemo(() => {
-    const edges = [zSnaps[0], zSnaps[zSnaps.length - 1]];
+    const edges = [-halfWidth, halfWidth];
 
     dividers.forEach((divider) => {
       if (divider.axis === "x") edges.push(divider.position);
     });
 
     return Array.from(new Set(edges));
-  }, [dividers, zSnaps]);
+  }, [dividers, halfWidth]);
 
   const startSnaps = useMemo(() => {
     const keyFor = (snap: SnapPoint) => `${snap.x}-${snap.z}`;
