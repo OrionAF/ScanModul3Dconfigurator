@@ -6,6 +6,11 @@ import { getSnapGrid } from "../components/interaction/grid";
 const buildSnapMap = (basket: BasketType): BasketSnapMap => {
   const { xSnaps, zSnaps } = getSnapGrid(basket);
 
+  const placementSnaps = basket.placement?.startSnaps;
+  const startXSnaps = placementSnaps?.x ?? xSnaps;
+  const startZSnaps = placementSnaps?.z ?? zSnaps;
+  const excludeCorners = placementSnaps?.excludeCorners ?? false;
+
   const halfLength = basket.specs.dimensions.internalBottom.length / 2;
   const halfWidth = basket.specs.dimensions.internalBottom.width / 2;
 
@@ -23,16 +28,29 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
       .filter((target) => (axis === "x" ? target.x !== snap.x : target.z !== snap.z))
       .map((target) => ({ ...target }));
 
+  const minXSnap = startXSnaps[0];
+  const maxXSnap = startXSnaps[startXSnaps.length - 1];
+  const minZSnap = startZSnaps[0];
+  const maxZSnap = startZSnaps[startZSnaps.length - 1];
+
+  const isCorner = (side: "x" | "z", snap: SnapPoint) => {
+    if (!excludeCorners) return false;
+    if (side === "z") return snap.x === minXSnap || snap.x === maxXSnap;
+    return snap.z === minZSnap || snap.z === maxZSnap;
+  };
+
   ([-halfWidth, halfWidth] as const).forEach((zEdge) => {
-    xSnaps.forEach((x) => {
+    startXSnaps.forEach((x) => {
       const snap = { x, z: zEdge, side: "z" as const };
+      if (isCorner("z", snap)) return;
       addSnap(snap, addTargets(snap, zSnaps.map((z) => ({ x, z })), "z"));
     });
   });
 
   ([-halfLength, halfLength] as const).forEach((xEdge) => {
-    zSnaps.forEach((z) => {
+    startZSnaps.forEach((z) => {
       const snap = { x: xEdge, z, side: "x" as const };
+      if (isCorner("x", snap)) return;
       addSnap(snap, addTargets(snap, xSnaps.map((x) => ({ x, z })), "x"));
     });
   });
