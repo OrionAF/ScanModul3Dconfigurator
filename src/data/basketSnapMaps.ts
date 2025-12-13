@@ -9,7 +9,7 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
   const placementSnaps = basket.placement?.startSnaps;
   const startXSnaps = placementSnaps?.x ?? xSnaps;
   const startZSnaps = placementSnaps?.z ?? zSnaps;
-  const excludeCorners = placementSnaps?.excludeCorners ?? false;
+  const excludeCorners = placementSnaps?.excludeCorners ?? true;
 
   const halfLength = basket.specs.dimensions.internalBottom.length / 2;
   const halfWidth = basket.specs.dimensions.internalBottom.width / 2;
