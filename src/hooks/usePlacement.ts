@@ -139,14 +139,14 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
         axis,
         position,
         length: finalLength,
-        height: basket.specs.dividers.height,
+        height: basket.dimensions.height,
         offsetAlongAxis: finalOffset,
       };
     },
     [
       basket.specs.dimensions.internalBottom.length,
       basket.specs.dimensions.internalBottom.width,
-      basket.specs.dividers.height,
+      basket.dimensions.height,
     ]
   );
 
