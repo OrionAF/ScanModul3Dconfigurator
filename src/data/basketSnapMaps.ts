@@ -28,10 +28,10 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
       .filter((target) => (axis === "x" ? target.x !== snap.x : target.z !== snap.z))
       .map((target) => ({ ...target }));
 
-  const minXSnap = startXSnaps[0];
-  const maxXSnap = startXSnaps[startXSnaps.length - 1];
-  const minZSnap = startZSnaps[0];
-  const maxZSnap = startZSnaps[startZSnaps.length - 1];
+  const minXSnap = Math.min(...startXSnaps);
+  const maxXSnap = Math.max(...startXSnaps);
+  const minZSnap = Math.min(...startZSnaps);
+  const maxZSnap = Math.max(...startZSnaps);
 
   const isCorner = (side: "x" | "z", snap: SnapPoint) => {
     if (!excludeCorners) return false;
