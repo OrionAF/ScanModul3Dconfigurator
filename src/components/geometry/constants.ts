@@ -8,7 +8,7 @@ export const SPECS: BasketSpecs = {
     internalBottom: { length: 530, width: 330 },
   },
   dividers: {
-    height: 22,
+    height: 20,
   },
   holes: {
     longSide: {
