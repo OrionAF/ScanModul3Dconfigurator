@@ -54,7 +54,7 @@ const AppContent = () => {
                 <div className={`text-xs mt-1 space-y-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                   <div>Left Click: Select/Rotate | Right Click: Pan | Scroll: Zoom</div>
                   <div className={isDarkMode ? "text-teal-300" : "text-teal-600"}>
-                    Tip: Divider mode now uses two clicks: choose a start snap, then an end snap to place.
+                    Tip: Divider mode: click the basket floor to drop a divider aligned to the nearest short-side bar.
                   </div>
                   <div className={isDarkMode ? "text-gray-400" : "text-gray-500"}>
                     Right-click a divider to select; resize with handles when not placing.

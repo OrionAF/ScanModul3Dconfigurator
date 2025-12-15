@@ -31,6 +31,7 @@ export const Controls: React.FC = () => {
     isCameraLocked,
     setCameraView,
     reset,
+    hoverDiagnostics,
   } = useConfigurator();
 
   const textClass = isDarkMode ? "text-white" : "text-gray-800";
@@ -209,6 +210,28 @@ export const Controls: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+        </PanelSection>
+
+        <PanelSection title="Debugger" isDarkMode={isDarkMode}>
+          <div className={`space-y-2 p-3 rounded-lg border ${borderClass} ${mutedBgClass}`}>
+            <p className={`text-xs ${subTextClass}`}>
+              Hover over the basket floor while in Divider mode to inspect the nearest bars and tiles.
+            </p>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="flex justify-between">
+                <span className={subTextClass}>Long-side bar</span>
+                <span className={textClass}>{hoverDiagnostics.longSideBarId ?? "None"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={subTextClass}>Short-side bar</span>
+                <span className={textClass}>{hoverDiagnostics.shortSideBarId ?? "None"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={subTextClass}>Floor tile</span>
+                <span className={textClass}>{hoverDiagnostics.tileId ?? "None"}</span>
+              </div>
+            </div>
           </div>
         </PanelSection>
 
