@@ -84,7 +84,7 @@ const SceneContent: React.FC<SceneContentProps> = ({
           />
 
           {isDrawingMode && (
-            <PlacementPlane basket={basket} placementMode={placementMode} dividers={dividers} onPlace={placeDivider as any} />
+            <PlacementPlane basket={basket} placementMode={placementMode} onPlace={placeDivider as any} />
           )}
 
           {items.map((item) => (
