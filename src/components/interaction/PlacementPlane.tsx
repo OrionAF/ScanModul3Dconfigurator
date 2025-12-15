@@ -3,6 +3,7 @@ import { ThreeEvent } from "@react-three/fiber";
 import { BasketType } from "../../types/basket";
 import { usePlacement } from "../../hooks/usePlacement";
 import { PlacementMode } from "../../context/ConfiguratorProvider";
+import { findClosestSnap, getSnapGrid } from "./grid";
 
 export type PlacementPlaneProps = {
   basket: BasketType;
@@ -21,6 +22,8 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
     [basket.specs.dimensions.internalBottom.length, basket.specs.dimensions.internalBottom.width]
   );
 
+  const { zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
+
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
   const handlePlace = (event: ThreeEvent<MouseEvent>) => {
@@ -29,8 +32,9 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
 
     const { z } = event.point;
     const position = clamp(z, -placementWidth / 2, placementWidth / 2);
+    const snappedBar = findClosestSnap(position, zSnaps);
 
-    onPlace(position, "x", placementLength, 0);
+    onPlace(snappedBar.center, "x", placementLength, 0);
   };
 
   return (

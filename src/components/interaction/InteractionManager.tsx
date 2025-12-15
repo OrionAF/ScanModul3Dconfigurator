@@ -61,7 +61,7 @@ export const InteractionManager: React.FC<InteractionManagerProps> = ({
 
     const snaps = axis === "x" ? xSnaps : zSnaps;
     const rawMouseVal = axis === "x" ? point.x : point.z;
-    const snappedVal = findClosestSnap(rawMouseVal, snaps);
+    const snappedVal = findClosestSnap(rawMouseVal, snaps).center;
 
     const currentLen = originalDivider.length;
     const fixedStart = (originalDivider.offsetAlongAxis || 0) - currentLen / 2;
