@@ -10,6 +10,8 @@ export type HoleGrid = {
   start: number;
   pitch: number;
   centers: number[];
+  gap: number;
+  bar: number;
 };
 
 export const buildHoleGrid = (
@@ -21,7 +23,7 @@ export const buildHoleGrid = (
   const start = -(trackLength / 2) + margin;
   const centers = Array.from({ length: config.cols }, (_, i) => start + config.gap + config.bar / 2 + i * pitch);
 
-  return { start, pitch, centers };
+  return { start, pitch, centers, gap: config.gap, bar: config.bar };
 };
 
 export const getSideHoleGrids = (specs: BasketSpecs) => {
