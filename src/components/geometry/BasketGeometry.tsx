@@ -10,6 +10,7 @@ import {
   SPECS,
   WALL_THICKNESS,
 } from "./constants";
+import { buildHoleGrid } from "../../utils/holeGrid";
 
 export const Guides: React.FC<{
   widthBottom: number;
@@ -21,18 +22,13 @@ export const Guides: React.FC<{
     const lines: { position: [number, number, number]; rotation: [number, number, number]; height: number }[] = [];
     if (!config) return [];
 
-    const count = config.cols - 1;
-    const gap = config.gap;
-    const bar = config.bar;
-    const mb = config.marginSideBottom;
-    const mt = config.marginSideTop;
+    const baseConfig = { cols: config.cols, gap: config.gap, bar: config.bar };
+    const bottomGrid = buildHoleGrid(widthBottom, baseConfig, config.marginSideBottom);
+    const topGrid = buildHoleGrid(widthTop, baseConfig, config.marginSideTop);
 
-    const startX_bot = -(widthBottom / 2) + mb;
-    const startX_top = -(widthTop / 2) + mt;
-
-    for (let i = 0; i < count; i++) {
-      const xBot = startX_bot + i * (gap + bar) + gap + bar / 2;
-      const xTop = startX_top + i * (gap + bar) + gap + bar / 2;
+    for (let i = 0; i < config.cols - 1; i++) {
+      const xBot = bottomGrid.centers[i];
+      const xTop = topGrid.centers[i];
 
       const dx = xTop - xBot;
       const dy = slantHeight;
@@ -89,6 +85,8 @@ export const PerforatedWall: React.FC<{
   const shape = useMemo(() => {
     const s = new THREE.Shape();
 
+    const holeConfig = { cols: config.cols, gap: config.gap, bar: config.bar };
+
     const halfB = widthBottom / 2;
     const halfT = widthTop / 2;
 
@@ -106,15 +104,14 @@ export const PerforatedWall: React.FC<{
 
         const ratio = startY / slantHeight;
         const currentWidth = widthBottom + (widthTop - widthBottom) * ratio;
-        const currentHalf = currentWidth / 2;
 
         const verticalRatio = row.y / totalVerticalHeight;
         const margin = config.marginSideBottom + (config.marginSideTop - config.marginSideBottom) * verticalRatio;
 
-        const startX = -currentHalf + margin;
+        const rowGrid = buildHoleGrid(currentWidth, holeConfig, margin);
 
         for (let i = 0; i < config.cols; i++) {
-          const x = startX + i * (config.gap + config.bar);
+          const x = rowGrid.start + i * rowGrid.pitch;
 
           const holePath = new THREE.Path();
           holePath.moveTo(x, startY);
