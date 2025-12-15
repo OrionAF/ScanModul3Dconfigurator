@@ -3,7 +3,7 @@ import { SPECS } from "../components/geometry/constants";
 
 const DEFAULT_PLACEMENT: BasketPlacementConfig = {
   startSnaps: {
-    excludeCorners: false,
+    excludeCorners: true,
   },
 };
 
