@@ -1,21 +1,11 @@
 import { BasketType } from "../../types/basket";
+import { getSideHoleGrids } from "../../utils/holeGrid";
 
 export const getSnapGrid = (basket: BasketType) => {
-  const xConfig = basket.specs.holes.longSide;
-  const xTrackLen = basket.specs.dimensions.internalBottom.length;
-  const xStart = -(xTrackLen / 2) + xConfig.marginBottom;
-  const xPitch = xConfig.gap + xConfig.bar;
+  const { longSide, shortSide } = getSideHoleGrids(basket.specs);
 
-  const xSnaps: number[] = [];
-  for (let i = 0; i < xConfig.cols; i++) xSnaps.push(xStart + xConfig.gap + xConfig.bar / 2 + i * xPitch);
-
-  const zConfig = basket.specs.holes.shortSide;
-  const zTrackLen = basket.specs.dimensions.internalBottom.width;
-  const zStart = -(zTrackLen / 2) + zConfig.marginBottom;
-  const zPitch = zConfig.gap + zConfig.bar;
-
-  const zSnaps: number[] = [];
-  for (let i = 0; i < zConfig.cols; i++) zSnaps.push(zStart + zConfig.gap + zConfig.bar / 2 + i * zPitch);
+  const xSnaps = longSide.centers;
+  const zSnaps = shortSide.centers;
 
   return { xSnaps, zSnaps };
 };

@@ -1,10 +1,12 @@
 import { BasketType } from "../types/basket";
 import { BasketSnapMap, SnapPoint, snapKey } from "../types/placement";
 import { BASKETS } from "./catalog";
-import { getSnapGrid } from "../components/interaction/grid";
+import { getSideHoleGrids } from "../utils/holeGrid";
 
 const buildSnapMap = (basket: BasketType): BasketSnapMap => {
-  const { xSnaps, zSnaps } = getSnapGrid(basket);
+  const { longSide, shortSide } = getSideHoleGrids(basket.specs);
+  const xSnaps = longSide.centers;
+  const zSnaps = shortSide.centers;
 
   const placementSnaps = basket.placement?.startSnaps;
   const startXSnaps = placementSnaps?.x ?? xSnaps;
