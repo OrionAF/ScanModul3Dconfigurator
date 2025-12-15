@@ -81,7 +81,7 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
       xSnaps.forEach((x) => {
         if (dividerZEdgeSet.has(x)) return; // avoid corners
         const snap = { x, z: zEdge, side: "z" as const };
-        const targets = zSnaps.filter((z) => z !== zEdge).map((z) => ({ x, z }));
+        const targets = xSnaps.filter((targetX) => targetX !== x).map((targetX) => ({ x: targetX, z: zEdge }));
         addSnap(snap, targets);
       });
     });
@@ -90,7 +90,7 @@ export const usePlacement = ({ basket, placementMode, onPlace, dividers }: UsePl
       zSnaps.forEach((z) => {
         if (dividerXEdgeSet.has(z)) return; // avoid corners
         const snap = { x: xEdge, z, side: "x" as const };
-        const targets = xSnaps.filter((x) => x !== xEdge).map((x) => ({ x, z }));
+        const targets = zSnaps.filter((targetZ) => targetZ !== z).map((targetZ) => ({ x: xEdge, z: targetZ }));
         addSnap(snap, targets);
       });
     });

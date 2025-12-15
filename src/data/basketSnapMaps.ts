@@ -45,7 +45,14 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
     startXSnaps.forEach((x) => {
       const snap = { x, z: zEdge, side: "z" as const };
       if (isCorner("z", snap)) return;
-      addSnap(snap, addTargets(snap, zSnaps.map((z) => ({ x, z })), "z"));
+      addSnap(
+        snap,
+        addTargets(
+          snap,
+          xSnaps.map((targetX) => ({ x: targetX, z: zEdge })),
+          "x"
+        )
+      );
     });
   });
 
@@ -53,7 +60,14 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
     startZSnaps.forEach((z) => {
       const snap = { x: xEdge, z, side: "x" as const };
       if (isCorner("x", snap)) return;
-      addSnap(snap, addTargets(snap, xSnaps.map((x) => ({ x, z })), "x"));
+      addSnap(
+        snap,
+        addTargets(
+          snap,
+          zSnaps.map((targetZ) => ({ x: xEdge, z: targetZ })),
+          "z"
+        )
+      );
     });
   });
 
