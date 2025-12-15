@@ -11,6 +11,7 @@ import {
   WALL_THICKNESS,
 } from "./constants";
 import { buildHoleGrid } from "../../utils/holeGrid";
+import { buildFloorTiles } from "../../utils/floorGrid";
 
 export const Guides: React.FC<{
   widthBottom: number;
@@ -144,6 +145,8 @@ export const PerforatedWall: React.FC<{
 };
 
 export const Floor: React.FC = () => {
+  const tiles = useMemo(() => buildFloorTiles(SPECS), []);
+
   const shape = useMemo(() => {
     const s = new THREE.Shape();
     const w = SPECS.dimensions.internalBottom.width;
@@ -155,49 +158,18 @@ export const Floor: React.FC = () => {
     s.lineTo(-l / 2, w / 2);
     s.lineTo(-l / 2, -w / 2);
 
-    const createSection = (startX: number, startZ: number, flipX: boolean, flipZ: boolean) => {
-      const cols = 8;
-      const rows = 4;
-
-      const gap = SPECS.holes.grid.gap;
-      const rib = SPECS.holes.grid.rib;
-
-      const dirX = flipX ? -1 : 1;
-      const dirZ = flipZ ? -1 : 1;
-
-      for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-          if (c === cols - 1 && r === rows - 1) continue;
-
-          const holeX = startX + c * (gap + rib) * dirX;
-          const holeZ = startZ + r * (gap + rib) * dirZ;
-
-          const x1 = dirX === 1 ? holeX : holeX - gap;
-          const z1 = dirZ === 1 ? holeZ : holeZ - gap;
-
-          const hole = new THREE.Path();
-          hole.moveTo(x1, z1);
-          hole.lineTo(x1 + gap, z1);
-          hole.lineTo(x1 + gap, z1 + gap);
-          hole.lineTo(x1, z1 + gap);
-          hole.lineTo(x1, z1);
-          s.holes.push(hole);
-        }
-      }
-    };
-
-    const leftX = -l / 2 + SPECS.holes.grid.offsetX;
-    const rightX = l / 2 - SPECS.holes.grid.offsetX;
-    const botZ = -w / 2 + SPECS.holes.grid.offsetZ;
-    const topZ = w / 2 - SPECS.holes.grid.offsetZ;
-
-    createSection(leftX, botZ, false, false);
-    createSection(rightX, botZ, true, false);
-    createSection(leftX, topZ, false, true);
-    createSection(rightX, topZ, true, true);
+    tiles.forEach((tile) => {
+      const hole = new THREE.Path();
+      hole.moveTo(tile.bounds.minX, tile.bounds.minZ);
+      hole.lineTo(tile.bounds.maxX, tile.bounds.minZ);
+      hole.lineTo(tile.bounds.maxX, tile.bounds.maxZ);
+      hole.lineTo(tile.bounds.minX, tile.bounds.maxZ);
+      hole.lineTo(tile.bounds.minX, tile.bounds.minZ);
+      s.holes.push(hole);
+    });
 
     return s;
-  }, []);
+  }, [tiles]);
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR_THICKNESS / 2, 0]}>
