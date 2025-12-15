@@ -31,15 +31,12 @@ const buildSnapMap = (basket: BasketType): BasketSnapMap => {
   const [minXSnap, maxXSnap] = [Math.min(...startXSnaps), Math.max(...startXSnaps)];
   const [minZSnap, maxZSnap] = [Math.min(...startZSnaps), Math.max(...startZSnaps)];
 
-  const xSnapPadding = startXSnaps.length > 1 ? Math.abs(startXSnaps[1] - startXSnaps[0]) : 0;
-  const zSnapPadding = startZSnaps.length > 1 ? Math.abs(startZSnaps[1] - startZSnaps[0]) : 0;
-
-  const isNear = (value: number, edge: number, padding: number) => Math.abs(edge - value) <= padding;
+  const approxEqual = (a: number, b: number) => Math.abs(a - b) <= 1e-3;
 
   const isCorner = (side: "x" | "z", snap: SnapPoint) => {
     if (!excludeCorners) return false;
-    if (side === "z") return isNear(snap.x, minXSnap, xSnapPadding) || isNear(snap.x, maxXSnap, xSnapPadding);
-    return isNear(snap.z, minZSnap, zSnapPadding) || isNear(snap.z, maxZSnap, zSnapPadding);
+    if (side === "z") return approxEqual(snap.x, minXSnap) || approxEqual(snap.x, maxXSnap);
+    return approxEqual(snap.z, minZSnap) || approxEqual(snap.z, maxZSnap);
   };
 
   ([-halfWidth, halfWidth] as const).forEach((zEdge) => {
