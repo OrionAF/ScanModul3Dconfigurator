@@ -43,11 +43,24 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
 
   const findNearestBars = useCallback(
     (x: number, z: number) => {
-      const longSideBars = z >= 0 ? barMaps.bySide.NL : barMaps.bySide.SL;
-      const shortSideBars = x >= 0 ? barMaps.bySide.ES : barMaps.bySide.WS;
+      const longSideBars = z >= 0 ? barMaps.bySide.SL : barMaps.bySide.NL;
+      const shortSideBars = x >= 0 ? barMaps.bySide.WS : barMaps.bySide.ES;
 
       const longSideBar = findClosestSnap(x, longSideBars);
       const shortSideBar = findClosestSnap(z, shortSideBars);
+
+      if (import.meta.env.DEV) {
+        console.debug(
+          "PlacementPlane: cross-side bar selection",
+          {
+            pointer: { x, z },
+            selectedLongSide: longSideBars[0]?.side,
+            selectedShortSide: shortSideBars[0]?.side,
+            longSideBarId: longSideBar?.id ?? null,
+            shortSideBarId: shortSideBar?.id ?? null,
+          },
+        );
+      }
 
       return {
         longSideBarId: longSideBar?.id ?? null,
