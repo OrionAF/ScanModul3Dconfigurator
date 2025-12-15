@@ -1,9 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { ThreeEvent } from "@react-three/fiber";
 import { BasketType } from "../../types/basket";
 import { usePlacement } from "../../hooks/usePlacement";
 import { PlacementMode } from "../../context/ConfiguratorProvider";
 import { findClosestSnap, getSnapGrid } from "./grid";
+import { buildFloorTiles } from "../../utils/floorGrid";
+import { getSideBarMaps } from "../../utils/barIds";
+import { useConfigurator } from "../../context/ConfiguratorProvider";
 
 export type PlacementPlaneProps = {
   basket: BasketType;
@@ -13,6 +16,15 @@ export type PlacementPlaneProps = {
 
 export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placementMode, onPlace }) => {
   const { planeY } = usePlacement({ basket });
+  const { setHoverDiagnostics } = useConfigurator();
+
+  useEffect(
+    () => () => setHoverDiagnostics({ longSideBarId: null, shortSideBarId: null, tileId: null }),
+    [setHoverDiagnostics],
+  );
+
+  const floorTiles = useMemo(() => buildFloorTiles(basket.specs), [basket.specs]);
+  const barMaps = useMemo(() => getSideBarMaps(basket.specs), [basket.specs]);
 
   const { placementLength, placementWidth } = useMemo(
     () => ({
@@ -23,6 +35,27 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
   );
 
   const { zSnaps } = useMemo(() => getSnapGrid(basket), [basket]);
+
+  const findTileAtPoint = useCallback(
+    (x: number, z: number) => floorTiles.find((tile) => x >= tile.bounds.minX && x <= tile.bounds.maxX && z >= tile.bounds.minZ && z <= tile.bounds.maxZ),
+    [floorTiles],
+  );
+
+  const findNearestBars = useCallback(
+    (x: number, z: number) => {
+      const longSideBars = z >= 0 ? barMaps.bySide.NL : barMaps.bySide.SL;
+      const shortSideBars = x >= 0 ? barMaps.bySide.ES : barMaps.bySide.WS;
+
+      const longSideBar = findClosestSnap(x, longSideBars);
+      const shortSideBar = findClosestSnap(z, shortSideBars);
+
+      return {
+        longSideBarId: longSideBar?.id ?? null,
+        shortSideBarId: shortSideBar?.id ?? null,
+      };
+    },
+    [barMaps.bySide.NL, barMaps.bySide.SL, barMaps.bySide.ES, barMaps.bySide.WS],
+  );
 
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -37,11 +70,29 @@ export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placemen
     onPlace(snappedBar.center, "x", placementLength, 0);
   };
 
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
+    const { x, z } = event.point;
+    const nearestTile = findTileAtPoint(x, z);
+    const { longSideBarId, shortSideBarId } = findNearestBars(x, z);
+
+    setHoverDiagnostics({
+      longSideBarId,
+      shortSideBarId,
+      tileId: nearestTile?.id ?? null,
+    });
+  };
+
+  const handlePointerOut = () => {
+    setHoverDiagnostics({ longSideBarId: null, shortSideBarId: null, tileId: null });
+  };
+
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, planeY - 0.5, 0]}
       onClick={handlePlace}
+      onPointerMove={handlePointerMove}
+      onPointerOut={handlePointerOut}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <planeGeometry args={[placementLength, placementWidth]} />

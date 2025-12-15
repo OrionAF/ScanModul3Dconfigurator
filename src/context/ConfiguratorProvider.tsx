@@ -3,6 +3,7 @@ import { BASKETS } from "../data/catalog";
 import { BasketType } from "../types/basket";
 import { Divider } from "../types/divider";
 import { PlacedItem } from "../types/item";
+import { BarId } from "../utils/barIds";
 
 export type PlacementMode = "divider" | "remove" | null;
 export type CameraView = "iso" | "top" | "front";
@@ -13,6 +14,7 @@ type ConfiguratorContextValue = {
   items: PlacedItem[];
   placementMode: PlacementMode;
   selectedDividerId: string | null;
+  hoverDiagnostics: HoverDiagnostics;
   isDarkMode: boolean;
   cameraView: CameraView;
   effectiveCameraView: CameraView;
@@ -27,6 +29,13 @@ type ConfiguratorContextValue = {
   removeDivider: (id: string) => void;
   selectDivider: (id: string | null) => void;
   deselectAll: () => void;
+  setHoverDiagnostics: (diagnostics: HoverDiagnostics) => void;
+};
+
+type HoverDiagnostics = {
+  longSideBarId: BarId | null;
+  shortSideBarId: BarId | null;
+  tileId: string | null;
 };
 
 const ConfiguratorContext = createContext<ConfiguratorContextValue | undefined>(undefined);
@@ -38,6 +47,11 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
   const [selectedDividerId, setSelectedDividerId] = useState<string | null>(null);
+  const [hoverDiagnostics, setHoverDiagnosticsState] = useState<HoverDiagnostics>({
+    longSideBarId: null,
+    shortSideBarId: null,
+    tileId: null,
+  });
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [cameraView, setCameraView] = useState<CameraView>("iso");
@@ -51,6 +65,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setItems([]);
     setPlacementMode(null);
     setSelectedDividerId(null);
+    setHoverDiagnosticsState({ longSideBarId: null, shortSideBarId: null, tileId: null });
   }, []);
 
   const placeDivider = useCallback(
@@ -93,6 +108,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const deselectAll = useCallback(() => {
     setPlacementMode(null);
     setSelectedDividerId(null);
+    setHoverDiagnosticsState({ longSideBarId: null, shortSideBarId: null, tileId: null });
   }, []);
 
   const reset = useCallback(() => {
@@ -100,6 +116,11 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setItems([]);
     setPlacementMode(null);
     setSelectedDividerId(null);
+    setHoverDiagnosticsState({ longSideBarId: null, shortSideBarId: null, tileId: null });
+  }, []);
+
+  const setHoverDiagnostics = useCallback((diagnostics: HoverDiagnostics) => {
+    setHoverDiagnosticsState(diagnostics);
   }, []);
 
   const toggleTheme = useCallback(() => setIsDarkMode((prev) => !prev), []);
@@ -111,6 +132,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       items,
       placementMode,
       selectedDividerId,
+      hoverDiagnostics,
       isDarkMode,
       cameraView,
       effectiveCameraView,
@@ -125,6 +147,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       removeDivider,
       selectDivider,
       deselectAll,
+      setHoverDiagnostics,
     }),
     [
       cameraView,
@@ -132,6 +155,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       deselectAll,
       dividers,
       effectiveCameraView,
+      hoverDiagnostics,
       isCameraLocked,
       isDarkMode,
       items,
@@ -141,6 +165,7 @@ export const ConfiguratorProvider: React.FC<{ children: React.ReactNode }> = ({ 
       reset,
       selectBasket,
       selectDivider,
+      setHoverDiagnostics,
       toggleTheme,
       updateDivider,
     ]
