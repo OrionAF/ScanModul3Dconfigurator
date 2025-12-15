@@ -163,7 +163,7 @@ export const Controls: React.FC = () => {
                 <PenTool className="w-4 h-4" />
                 <span>Divider mode</span>
               </div>
-              <span className={subTextClass}>Snap start → snap end</span>
+              <span className={subTextClass}>Click the basket floor to add</span>
               <span className={`text-[10px] ${hintTextClass}`}>Shortcut: 1 (Esc to cancel)</span>
             </Button>
 
@@ -182,8 +182,7 @@ export const Controls: React.FC = () => {
             </Button>
           </div>
           <p className={`text-[11px] mt-2 leading-relaxed ${subTextClass}`}>
-            • Toggle Divider mode and click a snap point to start. Click a second snap on the same track or crossing to
-            place the divider.
+            • Toggle Divider mode and click on the basket floor to place a divider across the basket.
             <br />• Right-click a divider to select. Drag the yellow handles to resize when placement mode is off. Press
             Delete to remove selected.
           </p>

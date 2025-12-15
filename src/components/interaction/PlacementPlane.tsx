@@ -1,136 +1,47 @@
-import React from "react";
-import { Divider } from "../../types/divider";
+import React, { useMemo } from "react";
+import { ThreeEvent } from "@react-three/fiber";
 import { BasketType } from "../../types/basket";
-import { DividerMesh } from "../geometry/DividerMesh";
 import { usePlacement } from "../../hooks/usePlacement";
 import { PlacementMode } from "../../context/ConfiguratorProvider";
 
 export type PlacementPlaneProps = {
   basket: BasketType;
   placementMode: PlacementMode;
-  dividers: Divider[];
   onPlace: (pos: number, axis: "x" | "z", length: number, offset: number) => void;
 };
 
-export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placementMode, dividers, onPlace }) => {
-  const { preview, planeY, setHoveredEnd, handleStartClick, handleEndClick } = usePlacement({
-    basket,
-    placementMode,
-    dividers,
-    onPlace,
-  });
+export const PlacementPlane: React.FC<PlacementPlaneProps> = ({ basket, placementMode, onPlace }) => {
+  const { planeY } = usePlacement({ basket });
 
-  const StartMarkers = () => {
-    if (placementMode !== "divider") return null;
-    if (preview.selectedStart) return null;
-    return (
-      <group>
-        {preview.startSnaps.map((snap) => (
-          <mesh
-            key={`start-${snap.x}-${snap.z}`}
-            position={[snap.x, planeY, snap.z]}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStartClick(snap);
-            }}
-          >
-            <cylinderGeometry args={[3, 3, 1.5, 12]} />
-            <meshBasicMaterial color="#22d3ee" transparent opacity={0.9} toneMapped={false} />
-          </mesh>
-        ))}
-      </group>
-    );
+  const { placementLength, placementWidth } = useMemo(
+    () => ({
+      placementLength: basket.specs.dimensions.internalBottom.length,
+      placementWidth: basket.specs.dimensions.internalBottom.width,
+    }),
+    [basket.specs.dimensions.internalBottom.length, basket.specs.dimensions.internalBottom.width]
+  );
+
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+  const handlePlace = (event: ThreeEvent<MouseEvent>) => {
+    if (placementMode !== "divider") return;
+    event.stopPropagation();
+
+    const { z } = event.point;
+    const position = clamp(z, -placementWidth / 2, placementWidth / 2);
+
+    onPlace(position, "x", placementLength, 0);
   };
-
-  const EndMarkers = () => {
-    if (!preview.selectedStart) return null;
-    return (
-      <group>
-        <mesh position={[preview.selectedStart.x, planeY, preview.selectedStart.z]}>
-          <cylinderGeometry args={[4, 4, 2, 12]} />
-          <meshBasicMaterial color="#0ea5e9" toneMapped={false} />
-        </mesh>
-        {preview.endSnaps.map((snap) => {
-          const isXAxis = snap.z === preview.selectedStart?.z;
-          return (
-            <mesh
-              key={`end-${snap.x}-${snap.z}`}
-              position={[snap.x, planeY, snap.z]}
-              onPointerOver={() => setHoveredEnd(snap)}
-              onPointerOut={() => setHoveredEnd(null)}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEndClick(snap);
-              }}
-            >
-              <cylinderGeometry args={[3.5, 3.5, 1.8, 12]} />
-              <meshBasicMaterial
-                color={isXAxis ? "#fbbf24" : "#34d399"}
-                toneMapped={false}
-                opacity={0.95}
-                transparent
-              />
-            </mesh>
-          );
-        })}
-      </group>
-    );
-  };
-
-  const PreviewViz = () => {
-    if (!preview.dividerPreview) return null;
-    return <DividerMesh divider={preview.dividerPreview} basket={basket} isSelected={false} isGhost={true} />;
-  };
-
-  const TrackGuides = () => {
-    if (!preview.selectedStart) return null;
-    const xTrackSnaps = preview.endSnaps.filter((snap) => snap.z === preview.selectedStart?.z);
-    const zTrackSnaps = preview.endSnaps.filter((snap) => snap.x === preview.selectedStart?.x);
-
-    const xSpan = xTrackSnaps.length
-      ? [
-          Math.min(...xTrackSnaps.map((snap) => snap.x), preview.selectedStart.x),
-          Math.max(...xTrackSnaps.map((snap) => snap.x), preview.selectedStart.x),
-        ]
-      : null;
-    const zSpan = zTrackSnaps.length
-      ? [
-          Math.min(...zTrackSnaps.map((snap) => snap.z), preview.selectedStart.z),
-          Math.max(...zTrackSnaps.map((snap) => snap.z), preview.selectedStart.z),
-        ]
-      : null;
-    return (
-      <>
-        {xSpan && (
-          <mesh
-            position={[xSpan[0] + (xSpan[1] - xSpan[0]) / 2, planeY - 0.5, preview.selectedStart.z]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[xSpan[1] - xSpan[0], 2]} />
-            <meshBasicMaterial color="#fbbf24" opacity={0.35} transparent toneMapped={false} />
-          </mesh>
-        )}
-        {zSpan && (
-          <mesh
-            position={[preview.selectedStart.x, planeY - 0.5, zSpan[0] + (zSpan[1] - zSpan[0]) / 2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[2, zSpan[1] - zSpan[0]]} />
-            <meshBasicMaterial color="#34d399" opacity={0.35} transparent toneMapped={false} />
-          </mesh>
-        )}
-      </>
-    );
-  };
-
-  if (placementMode !== "divider") return null;
 
   return (
-    <group>
-      <StartMarkers />
-      <EndMarkers />
-      <PreviewViz />
-      <TrackGuides />
-    </group>
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, planeY - 0.5, 0]}
+      onClick={handlePlace}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <planeGeometry args={[placementLength, placementWidth]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
   );
 };
